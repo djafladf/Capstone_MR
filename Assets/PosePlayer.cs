@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
+using UnityEngine.UI;
+using TMPro;
+
 public class PosePlayer : MonoBehaviour
 {
     [Header("필수 연결")]
@@ -18,7 +21,8 @@ public class PosePlayer : MonoBehaviour
     float Mx = 0, My = 0, Mz = 0, mx = 1000, my = 1000, mz = 1000;
 
     [SerializeField] Transform canvas;
-    [SerializeField] GameObject Image;
+    [SerializeField] GameObject txt;
+    [SerializeField] Gradient Grad;
     Dictionary<string, Transform> Objects = new Dictionary<string, Transform>();
 
     void Start()
@@ -26,14 +30,14 @@ public class PosePlayer : MonoBehaviour
         jointMap = new Dictionary<string, Transform>
         {
             {"Nose", FindBone("mixamorig:Head")},
-            {"Left Shoulder", FindBone("mixamorig:LeftShoulder")},
-            {"Right Shoulder", FindBone("mixamorig:RightShoulder")},
-            {"Left Elbow", FindBone("mixamorig:LeftArm")},
-            {"Right Elbow", FindBone("mixamorig:RightArm")},
-            {"Left Wrist", FindBone("mixamorig:LeftForeArm")},
-            {"Right Wrist", FindBone("mixamorig:RightForeArm")},
-            {"Left Palm", FindBone("mixamorig:LeftHand")},
-            {"Right Palm", FindBone("mixamorig:RightHand")},
+            {"Left Shoulder", FindBone("mixamorig:LeftArm")},
+            {"Right Shoulder", FindBone("mixamorig:RightArm")},
+            {"Left Elbow", FindBone("mixamorig:LeftForeArm")},
+            {"Right Elbow", FindBone("mixamorig:RightForeArm")},
+            {"Left Wrist", FindBone("mixamorig:LeftHand")},
+            {"Right Wrist", FindBone("mixamorig:RightHand")},
+            //{"Left Palm", FindBone("mixamorig:LeftHand")},
+            //{"Right Palm", FindBone("mixamorig:RightHand")},
             {"Left Hip", FindBone("mixamorig:LeftUpLeg")},
             {"Right Hip", FindBone("mixamorig:RightUpLeg")},
             {"Left Knee", FindBone("mixamorig:LeftLeg")},
@@ -44,7 +48,7 @@ public class PosePlayer : MonoBehaviour
             {"Right Foot", FindBone("mixamorig:RightToeBase")},
             {"Neck", FindBone("mixamorig:Neck")},
             {"Back", FindBone("mixamorig:Spine1")},
-            {"Waist", FindBone("mixamorig:Hips")}
+            {"Waist", FindBone("mixamorig:Spine")}
         };
 
         initialRotations = new Dictionary<string, Quaternion>();
@@ -52,8 +56,10 @@ public class PosePlayer : MonoBehaviour
         foreach (var pair in jointMap)
         {
             initialRotations[pair.Key] = pair.Value.localRotation;
-            Objects[pair.Key] = Instantiate(Image,canvas).transform;
+            GameObject cnt = Instantiate(txt, canvas); cnt.GetComponent<TMP_Text>().text = pair.Key;
+            Objects[pair.Key] = cnt.transform; 
         }
+        Destroy(txt.gameObject);
 
         poseData = JsonConvert.DeserializeObject<PoseData>(poseJson.text);
         
@@ -86,17 +92,19 @@ public class PosePlayer : MonoBehaviour
         }
     }
 
+    [SerializeField] Vector3 TestPos;
     void ApplyPose(Frame frame)
     {
         foreach(var j in frame.pts)
         {
             if (!jointMap.ContainsKey(j.Key)) continue;
             Vector3 xyz = new Vector3(
-                (j.Value.x  - mx) * Mx * 1920 - 960, 
-                (j.Value.y - my) * My * 1080 - 540, 
+                (j.Value.x - mx) * Mx,
+                (j.Value.y - my) * My,
                 (j.Value.z - mz) * Mz * 2f - 1f);
-            //Quaternion relativeRot = Quaternion.FromToRotation(Vector3.forward, xyz);
-            Objects[j.Key].localPosition = xyz;
+            Quaternion relativeRot = Quaternion.FromToRotation(TestPos, xyz);
+            jointMap[j.Key].localRotation = initialRotations[j.Key] * relativeRot;
+            //Objects[j.Key].localPosition = xyz;
         }
     }
 
