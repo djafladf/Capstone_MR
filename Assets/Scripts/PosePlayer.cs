@@ -25,18 +25,13 @@ public class PosePlayer : MonoBehaviour
     {
         jointMap = new Dictionary<int, Transform>
         {
-            {11, FindBone("mixamorig:LeftShoulder")},
-            {12, FindBone("mixamorig:RightShoulder")},
+            {0,  FindBone("mixamorig:Head")},
+            {11, FindBone("mixamorig:Neck")}, 
+            //{12, FindBone("mixamorig:RightShoulder")},
             {13, FindBone("mixamorig:LeftArm")},
             {14, FindBone("mixamorig:RightArm")},
             {15, FindBone("mixamorig:LeftForeArm")},
             {16, FindBone("mixamorig:RightForeArm")},
-            {17, FindBone("mixamorig:LeftHand")},
-            {18, FindBone("mixamorig:RightHand")},
-            {19, FindBone("mixamorig:LeftHandIndex1")},
-            {20, FindBone("mixamorig:RightHandIndex1")},
-            {21, FindBone("mixamorig:LeftHandPinky1")},
-            {22, FindBone("mixamorig:RightHandPinky1")},
             {23, FindBone("mixamorig:LeftUpLeg")},
             {24, FindBone("mixamorig:RightUpLeg")},
             {25, FindBone("mixamorig:LeftLeg")},
