@@ -58,12 +58,12 @@
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\PoseModel.cs" />
     <Compile Include="Assets\Scripts\Vars.cs" />
     <Compile Include="Assets\Scripts\DebugToScreen.cs" />
+    <Compile Include="Assets\Scripts\BB.cs" />
     <Compile Include="Assets\Scripts\PosePlayer.cs" />
     <Compile Include="Assets\Scripts\ButtonMaker.cs" />
-    <Compile Include="Assets\Scripts\PoseModel.cs" />
-    <Compile Include="Assets\Scripts\BB.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />

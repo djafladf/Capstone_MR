@@ -196,7 +196,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: faedde785c374b74882fac45b68714d0, type: 3}
   m_PrefabInstance: {fileID: 87265739}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &87265741
+--- !u!114 &87265744
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -205,18 +205,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 87265740}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0123936594b8b54fa4b845c5ba0b31a, type: 3}
+  m_Script: {fileID: 11500000, guid: 0470a3988c7a8a5489ca269fba22a5e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playbackSpeed: 0.5
   currentFrame: 0
   canvas: {fileID: 1579263905}
   txt: {fileID: 1105248063}
   Grad:
     serializedVersion: 2
-    key0: {r: 1, g: 0.015258133, b: 0.037837446, a: 1}
+    key0: {r: 1, g: 1, b: 1, a: 1}
     key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 1, g: 0, b: 0.022929192, a: 0}
+    key2: {r: 0, g: 0, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 0, g: 0, b: 0, a: 0}
@@ -224,7 +223,7 @@ MonoBehaviour:
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
     ctime1: 65535
-    ctime2: 65535
+    ctime2: 0
     ctime3: 0
     ctime4: 0
     ctime5: 0
@@ -241,7 +240,7 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  TestPos: {x: 0, y: 0, z: 0}
+  TestPos: {x: 0, y: 0, z: 1}
 --- !u!1 &208057979
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,6 +423,7 @@ GameObject:
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
+  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -507,6 +507,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2ad66f5f47c9b0e40a7eec1abf4c9b50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &963194230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d1c08d482412c5409035f3fecfc2247, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1105248063
@@ -730,40 +742,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0123936594b8b54fa4b845c5ba0b31a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playbackSpeed: 0.5
   currentFrame: 0
-  canvas: {fileID: 1579263905}
-  txt: {fileID: 1105248063}
-  Grad:
-    serializedVersion: 2
-    key0: {r: 1, g: 0.015258133, b: 0.037837446, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
-    key2: {r: 1, g: 0, b: 0.022929192, a: 0}
-    key3: {r: 0, g: 0, b: 0, a: 0}
-    key4: {r: 0, g: 0, b: 0, a: 0}
-    key5: {r: 0, g: 0, b: 0, a: 0}
-    key6: {r: 0, g: 0, b: 0, a: 0}
-    key7: {r: 0, g: 0, b: 0, a: 0}
-    ctime0: 0
-    ctime1: 65535
-    ctime2: 65535
-    ctime3: 0
-    ctime4: 0
-    ctime5: 0
-    ctime6: 0
-    ctime7: 0
-    atime0: 0
-    atime1: 65535
-    atime2: 0
-    atime3: 0
-    atime4: 0
-    atime5: 0
-    atime6: 0
-    atime7: 0
-    m_Mode: 0
-    m_NumColorKeys: 2
-    m_NumAlphaKeys: 2
-  TestPos: {x: 0, y: 0, z: 0}
 --- !u!1 &1579263901
 GameObject:
   m_ObjectHideFlags: 0

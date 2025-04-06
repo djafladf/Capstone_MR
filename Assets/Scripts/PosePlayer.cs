@@ -58,7 +58,7 @@ public class PosePlayer : MonoBehaviour
         {
             string path = Path.Combine(Application.streamingAssetsPath, "test_user.json");
             poseData = JsonConvert.DeserializeObject<PoseData_User>(File.ReadAllText(path));
-            foreach (var j in poseData.landmarks) j.Out();
+            //foreach (var j in poseData.landmarks) j.Out();
         }
         catch (Exception e)
         {
