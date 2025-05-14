@@ -9,7 +9,7 @@ using UnityEngine;
 
 public class Tongsin : MonoBehaviour
 {
-    [SerializeField] PosePlayer pp;
+    [SerializeField] List<PosePlayer> pp;
     ClientWebSocket ws = new ClientWebSocket();
     private CancellationTokenSource cancellation;
     async void Start()
@@ -62,7 +62,7 @@ public class Tongsin : MonoBehaviour
         {
             var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             var msg = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            pp.UpdatePose(msg);
+            foreach(var jk in pp) jk.UpdatePose(msg);
         }
     }
 

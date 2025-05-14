@@ -7,18 +7,12 @@ using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 public class PosePlayer : MonoBehaviour
 {
-	public static PosePlayer pp;
-
-	private void Awake()
-	{
-		if (PosePlayer.pp == null) PosePlayer.pp = this;
-		else Destroy(gameObject);
-	}
-
-
 	private PoseData_User poseData;
 	private Dictionary<int, Transform> jointMap;
 	private Dictionary<int, Quaternion> initialRotations;
+
+	Animator anim;
+
 	[SerializeField] private int currentFrame = 0;
 
 	String r = "Right";
@@ -26,26 +20,30 @@ public class PosePlayer : MonoBehaviour
 
 	void Start()
 	{
+		anim = GetComponent<Animator>();
 		jointMap = new Dictionary<int, Transform>
 		{
-			{0,  FindBone("mixamorig:Head")},
+			//{0,  FindBone("mixamorig:Head")},
 
-			{11, FindBone($"mixamorig:{l}Arm")},        // Left Shoulder
-			{12, FindBone($"mixamorig:{r}Arm")},       // Right Shoulder
-			{13, FindBone($"mixamorig:{l}ForeArm")},    // Left Elbow
-			{14, FindBone($"mixamorig:{r}ForeArm")},   // Right Elbow
-			{15, FindBone($"mixamorig:{l}Hand")},       // Left Wrist
-			{16, FindBone($"mixamorig:{r}Hand")},      // Right Wrist
+			{11, anim.GetBoneTransform(HumanBodyBones.LeftUpperArm)},        // Left Shoulder
+			{12, anim.GetBoneTransform(HumanBodyBones.RightUpperArm)},       // Right Shoulder
+			{13, anim.GetBoneTransform(HumanBodyBones.LeftLowerArm)},    // Left Elbow
+			{14, anim.GetBoneTransform(HumanBodyBones.RightLowerArm)},   // Right Elbow
+			{15, anim.GetBoneTransform(HumanBodyBones.LeftHand)},       // Left Wrist
+			{16, anim.GetBoneTransform(HumanBodyBones.RightHand)},      // Right Wrist
 
-			{17, FindBone($"mixamorig:Spine") },
+			{17, anim.GetBoneTransform(HumanBodyBones.Spine) },
+			//{18, FindBone($"mixamorig:Hips") },
 
-			{23, FindBone($"mixamorig:{l}UpLeg")},
-			{24, FindBone($"mixamorig:{r}UpLeg")},
-			{25, FindBone($"mixamorig:{l}Leg")},
-			{26, FindBone($"mixamorig:{r}Leg")},
-			{27, FindBone($"mixamorig:{l}Foot")},
-			{28, FindBone($"mixamorig:{r}Foot")},
+			{23, anim.GetBoneTransform(HumanBodyBones.LeftUpperLeg)},
+			{24, anim.GetBoneTransform(HumanBodyBones.RightUpperLeg)},
+			{25, anim.GetBoneTransform(HumanBodyBones.LeftLowerLeg)},
+			{26, anim.GetBoneTransform(HumanBodyBones.RightLowerLeg)},
+			{27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
+			{28,  anim.GetBoneTransform(HumanBodyBones.RightFoot)},
 		};
+        Vector3 modelForward = (jointMap[13].position - jointMap[11].position).normalized;
+        
 	}
 
 	public void UpdatePose(string text)
@@ -67,6 +65,7 @@ public class PosePlayer : MonoBehaviour
 
 	IEnumerator ApplyPose()
 	{
+		print("PoseStart!");
 		var WFS = new WaitForSeconds(0.1f);
 		while (true)
 		{
@@ -74,16 +73,31 @@ public class PosePlayer : MonoBehaviour
 			Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
 			foreach (var kp in poseData.landmarks)
 			{
+				
 				landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
 			}
-			Vector3 from, to, direction;
+            Vector3 p1 = landmarkPositions[11], p2 = landmarkPositions[24], p3 = landmarkPositions[12], p4 = landmarkPositions[23];
+
+            float midsub = 1.0f / ((p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x));
+            float sub1 = (p1.x * p2.y - p1.y * p2.x), sub2 = (p3.x * p4.y - p3.y * p4.x);
+
+            landmarkPositions[17] = new Vector3((sub1 * (p3.x - p4.x) - (p1.x - p2.x) * sub2) * midsub,
+                (sub1 * (p3.y - p4.y) - (p1.y - p2.y) * sub2),
+                (p1.z + p2.z + p3.z + p4.z) * 0.25f);
+
+			
+
+            Vector3 from, to, direction;
 			Quaternion rotation;
 			// 필요한 관절 위치 저장
-			/*from = landmarkPositions[17];
+			from = landmarkPositions[17];
 			to = (landmarkPositions[11] + landmarkPositions[12]) * 0.5f;
 			direction = (from - to).normalized;
 			rotation = Quaternion.LookRotation(direction) * corr;
-			jointMap[17].rotation = rotation;*/
+			jointMap[17].rotation = rotation;
+
+
+
 
 			// 상반 ( 허리 제외 )
 			for (int i = 11; i <= 14; i++)
@@ -110,16 +124,4 @@ public class PosePlayer : MonoBehaviour
 			}
 		}
     }
-
-
-	Transform FindBone(string name)
-	{
-		Transform[] children = GetComponentsInChildren<Transform>(true);
-		foreach (Transform t in children)
-		{
-			if (t.name == name)
-				return t;
-		}
-		return null;
-	}
 }
