@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 public class PosePlayer : MonoBehaviour
 {
@@ -35,6 +37,8 @@ public class PosePlayer : MonoBehaviour
 			{15, FindBone($"mixamorig:{l}Hand")},       // Left Wrist
 			{16, FindBone($"mixamorig:{r}Hand")},      // Right Wrist
 
+			{17, FindBone($"mixamorig:Spine") },
+
 			{23, FindBone($"mixamorig:{l}UpLeg")},
 			{24, FindBone($"mixamorig:{r}UpLeg")},
 			{25, FindBone($"mixamorig:{l}Leg")},
@@ -48,85 +52,64 @@ public class PosePlayer : MonoBehaviour
 	{
 		poseData = JsonConvert.DeserializeObject<PoseData_User>(text);
 
-		ApplyPose(poseData.landmarks);
+		if(Posecor == null) Posecor = StartCoroutine(ApplyPose());
 	}
 
     [SerializeField] private Vector3 Agle;
-
+	[SerializeField] private Vector3 Corr_Position;
     private void OnValidate()
     {
 		corr = Quaternion.Euler(Agle);
     }
 
-
+	Coroutine Posecor = null;
     Quaternion corr = Quaternion.Euler(Vector3.zero);
-	void ApplyPose(List<landmarks> frame)
+
+	IEnumerator ApplyPose()
 	{
-		// 필요한 관절 위치 저장
-		Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
-		foreach (var kp in frame)
+		var WFS = new WaitForSeconds(0.1f);
+		while (true)
 		{
-			landmarkPositions[kp.id] = new Vector3(kp.x, kp.y, kp.z);
+			yield return WFS;
+			Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
+			foreach (var kp in poseData.landmarks)
+			{
+				landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
+			}
+			Vector3 from, to, direction;
+			Quaternion rotation;
+			// 필요한 관절 위치 저장
+			/*from = landmarkPositions[17];
+			to = (landmarkPositions[11] + landmarkPositions[12]) * 0.5f;
+			direction = (from - to).normalized;
+			rotation = Quaternion.LookRotation(direction) * corr;
+			jointMap[17].rotation = rotation;*/
+
+			// 상반 ( 허리 제외 )
+			for (int i = 11; i <= 14; i++)
+			{
+				from = landmarkPositions[i];
+				to = landmarkPositions[i + 2];
+				direction = (to - from).normalized;
+				rotation = Quaternion.LookRotation(direction) * corr;
+				jointMap[i].rotation = rotation;
+			}
+			// 허리
+
+
+
+			// 하반
+			for (int i = 23; i <= 28; i++)
+			{
+				from = landmarkPositions[i];
+				to = landmarkPositions[i + 2];
+				direction = (to - from).normalized;
+				rotation = Quaternion.LookRotation(direction);
+				rotation *= corr;
+				jointMap[i].rotation = rotation;
+			}
 		}
-
-        // ------------------------------
-        // 상완 회전: 어깨 → 팔꿈치
-        // ------------------------------
-        // 왼팔 상완 (11 → 13)
-        if (true)
-		{
-			Vector3 from = landmarkPositions[11];
-			Vector3 to = landmarkPositions[13];
-			Vector3 direction = (to - from).normalized;
-
-			Quaternion rotation = Quaternion.LookRotation(direction);
-			rotation *= corr; // 모델 회전축 보정
-			jointMap[12].rotation = rotation;
-		}
-
-		
-
-		// 오른팔 상완 (12 → 14)
-		if (true)
-		{
-			Vector3 from = landmarkPositions[12];
-			Vector3 to = landmarkPositions[14];
-			Vector3 direction = (to - from).normalized;
-
-			Quaternion rotation = Quaternion.LookRotation(direction);
-			rotation *= corr;
-            jointMap[11].rotation = rotation;
-        }
-
-		// ------------------------------
-		// 전완 회전: 팔꿈치 → 손목
-		// ------------------------------
-
-		// 왼팔 전완 (13 → 15)
-		if (true)
-		{
-			Vector3 from = landmarkPositions[13];
-			Vector3 to = landmarkPositions[15];
-			Vector3 direction = (to - from).normalized;
-
-			Quaternion rotation = Quaternion.LookRotation(direction);
-            rotation *= corr;
-            jointMap[14].rotation = rotation;
-
-        }
-
-		// 오른팔 전완 (14 → 16)
-		if (true)
-		{
-			Vector3 from = landmarkPositions[14];
-			Vector3 to = landmarkPositions[16];
-			Vector3 direction = (to - from).normalized;
-
-			Quaternion rotation = Quaternion.LookRotation(direction);
-            rotation *= corr;
-            jointMap[13].rotation = rotation;
-        }
-	}
+    }
 
 
 	Transform FindBone(string name)

@@ -10,7 +10,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{27AD72AC-E505-DCDC-B9BE-EAD7709F9E79}</ProjectGuid>
+    <ProjectGuid>{1EE98971-DB57-CCE3-EB35-7D60258BAC4D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -62,9 +62,9 @@
     <Compile Include="Assets\Scripts\Vars.cs" />
     <Compile Include="Assets\Scripts\DebugToScreen.cs" />
     <Compile Include="Assets\Scripts\BB.cs" />
-    <Compile Include="Assets\Scripts\Tongsin.cs" />
     <Compile Include="Assets\Scripts\PosePlayer.cs" />
     <Compile Include="Assets\Scripts\ButtonMaker.cs" />
+    <Compile Include="Assets\Scripts\Tongsin.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
