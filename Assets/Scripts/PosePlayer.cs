@@ -1,106 +1,142 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using Newtonsoft.Json;
-using System.IO;
+﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public class PosePlayer : MonoBehaviour
 {
-    public static PosePlayer pp;
+	public static PosePlayer pp;
 
-    private void Awake()
+	private void Awake()
+	{
+		if (PosePlayer.pp == null) PosePlayer.pp = this;
+		else Destroy(gameObject);
+	}
+
+
+	private PoseData_User poseData;
+	private Dictionary<int, Transform> jointMap;
+	private Dictionary<int, Quaternion> initialRotations;
+	[SerializeField] private int currentFrame = 0;
+
+	String r = "Right";
+	String l = "Left";
+
+	void Start()
+	{
+		jointMap = new Dictionary<int, Transform>
+		{
+			{0,  FindBone("mixamorig:Head")},
+
+			{11, FindBone($"mixamorig:{l}Arm")},        // Left Shoulder
+			{12, FindBone($"mixamorig:{r}Arm")},       // Right Shoulder
+			{13, FindBone($"mixamorig:{l}ForeArm")},    // Left Elbow
+			{14, FindBone($"mixamorig:{r}ForeArm")},   // Right Elbow
+			{15, FindBone($"mixamorig:{l}Hand")},       // Left Wrist
+			{16, FindBone($"mixamorig:{r}Hand")},      // Right Wrist
+
+			{23, FindBone($"mixamorig:{l}UpLeg")},
+			{24, FindBone($"mixamorig:{r}UpLeg")},
+			{25, FindBone($"mixamorig:{l}Leg")},
+			{26, FindBone($"mixamorig:{r}Leg")},
+			{27, FindBone($"mixamorig:{l}Foot")},
+			{28, FindBone($"mixamorig:{r}Foot")},
+		};
+	}
+
+	public void UpdatePose(string text)
+	{
+		poseData = JsonConvert.DeserializeObject<PoseData_User>(text);
+
+		ApplyPose(poseData.landmarks);
+	}
+
+    [SerializeField] private Vector3 Agle;
+
+    private void OnValidate()
     {
-        if (PosePlayer.pp == null) PosePlayer.pp = this;
-        else Destroy(gameObject);
+		corr = Quaternion.Euler(Agle);
     }
 
 
-    private PoseData_User poseData;
-    private Dictionary<int, Transform> jointMap;
-    private Dictionary<int, Quaternion> initialRotations;
-    [SerializeField] private int currentFrame = 0;
+    Quaternion corr = Quaternion.Euler(Vector3.zero);
+	void ApplyPose(List<landmarks> frame)
+	{
+		// 필요한 관절 위치 저장
+		Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
+		foreach (var kp in frame)
+		{
+			landmarkPositions[kp.id] = new Vector3(kp.x, kp.y, kp.z);
+		}
 
+        // ------------------------------
+        // 상완 회전: 어깨 → 팔꿈치
+        // ------------------------------
+        // 왼팔 상완 (11 → 13)
+        if (true)
+		{
+			Vector3 from = landmarkPositions[11];
+			Vector3 to = landmarkPositions[13];
+			Vector3 direction = (to - from).normalized;
 
-    void Start()
-    {
-        jointMap = new Dictionary<int, Transform>
-        {
-            {0,  FindBone("mixamorig:Head")},
-            {11, FindBone("mixamorig:Neck")}, 
-            //{12, FindBone("mixamorig:RightShoulder")},
-            {13, FindBone("mixamorig:LeftArm")},
-            {14, FindBone("mixamorig:RightArm")},
-            {15, FindBone("mixamorig:LeftForeArm")},
-            {16, FindBone("mixamorig:RightForeArm")},
-            {23, FindBone("mixamorig:LeftUpLeg")},
-            {24, FindBone("mixamorig:RightUpLeg")},
-            {25, FindBone("mixamorig:LeftLeg")},
-            {26, FindBone("mixamorig:RightLeg")},
-            {27, FindBone("mixamorig:LeftFoot")},
-            {28, FindBone("mixamorig:RightFoot")},
-            {29, FindBone("mixamorig:LeftToeBase")},
-            {30, FindBone("mixamorig:RightToeBase")},
-            {31, FindBone("mixamorig:LeftFoot")},
-            {32, FindBone("mixamorig:RightFoot")},
-        };
+			Quaternion rotation = Quaternion.LookRotation(direction);
+			rotation *= corr; // 모델 회전축 보정
+			jointMap[12].rotation = rotation;
+		}
 
-        initialRotations = new Dictionary<int, Quaternion>();
+		
 
-        foreach (var pair in jointMap)
-        {
-            if (pair.Value != null) initialRotations[pair.Key] = pair.Value.localRotation;
+		// 오른팔 상완 (12 → 14)
+		if (true)
+		{
+			Vector3 from = landmarkPositions[12];
+			Vector3 to = landmarkPositions[14];
+			Vector3 direction = (to - from).normalized;
+
+			Quaternion rotation = Quaternion.LookRotation(direction);
+			rotation *= corr;
+            jointMap[11].rotation = rotation;
         }
-    }
 
-    public void UpdateJson()
-    {
-        try
-        {
-            string path = Path.Combine(Application.streamingAssetsPath, "test_user.json");
-            poseData = JsonConvert.DeserializeObject<PoseData_User>(File.ReadAllText(path));
-            //foreach (var j in poseData.landmarks) j.Out();
+		// ------------------------------
+		// 전완 회전: 팔꿈치 → 손목
+		// ------------------------------
+
+		// 왼팔 전완 (13 → 15)
+		if (true)
+		{
+			Vector3 from = landmarkPositions[13];
+			Vector3 to = landmarkPositions[15];
+			Vector3 direction = (to - from).normalized;
+
+			Quaternion rotation = Quaternion.LookRotation(direction);
+            rotation *= corr;
+            jointMap[14].rotation = rotation;
+
         }
-        catch (Exception e)
-        {
-            Debug.Log("Load Fail!");
+
+		// 오른팔 전완 (14 → 16)
+		if (true)
+		{
+			Vector3 from = landmarkPositions[14];
+			Vector3 to = landmarkPositions[16];
+			Vector3 direction = (to - from).normalized;
+
+			Quaternion rotation = Quaternion.LookRotation(direction);
+            rotation *= corr;
+            jointMap[13].rotation = rotation;
         }
-    }
+	}
 
-    public void UpdatePose()
-    {
-        if (poseData == null) { Debug.Log("No Json!"); return; }
-        if (currentFrame > poseData.landmarks.Count) { Debug.Log("More than limit!"); return; }
-        ApplyPose(poseData.landmarks);
-    }
 
-    void ApplyPose(List<landmarks> frame)
-    {
-        foreach (var kp in frame)
-        {
-            if (!jointMap.TryGetValue(kp.id, out Transform joint)) continue;
-            if (joint == null) continue;
-
-            Quaternion relativeRot = Quaternion.Euler(
-                Mathf.Rad2Deg * kp.x,
-                Mathf.Rad2Deg * kp.y,
-                Mathf.Rad2Deg * kp.z
-            );
-
-            if (initialRotations.ContainsKey(kp.id))
-            {
-                joint.localRotation = initialRotations[kp.id] * relativeRot;
-            }
-        }
-    }
-
-    Transform FindBone(string name)
-    {
-        Transform[] children = GetComponentsInChildren<Transform>(true);
-        foreach (Transform t in children)
-        {
-            if (t.name == name)
-                return t;
-        }
-        return null;
-    }
+	Transform FindBone(string name)
+	{
+		Transform[] children = GetComponentsInChildren<Transform>(true);
+		foreach (Transform t in children)
+		{
+			if (t.name == name)
+				return t;
+		}
+		return null;
+	}
 }

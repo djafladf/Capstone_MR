@@ -352,6 +352,7 @@
 "Assets/Scripts/DebugToScreen.cs"
 "Assets/Scripts/PoseModel.cs"
 "Assets/Scripts/PosePlayer.cs"
+"Assets/Scripts/Tongsin.cs"
 "Assets/Scripts/Vars.cs"
 -langversion:9.0
 /deterministic

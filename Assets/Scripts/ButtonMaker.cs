@@ -13,11 +13,11 @@ public class ButtonMaker : Editor
         EditorGUILayout.BeginVertical(); 
         GUILayout.FlexibleSpace();
 
-        GUILayout.Space(20);
+        /*GUILayout.Space(20);
         if (GUILayout.Button("Refresh Pose_User", GUILayout.Height(30)))
         {
             PosePlayer.pp.UpdateJson(); PosePlayer.pp.UpdatePose();
-        }
+        }*/
         GUILayout.Space(20);
         if (GUILayout.Button("Refresh Pose_Model", GUILayout.Height(30)))
         {
@@ -26,7 +26,7 @@ public class ButtonMaker : Editor
         GUILayout.Space(20);
         if (GUILayout.Button("Refresh All", GUILayout.Height(30)))
         {
-            PosePlayer.pp.UpdateJson(); PosePlayer.pp.UpdatePose();
+            //PosePlayer.pp.UpdateJson(); PosePlayer.pp.UpdatePose();
             PoseModel.pm.UpdateJson(); PoseModel.pm.UpdatePose();
         }
 

@@ -59,10 +59,11 @@ public class PoseModel : MonoBehaviour
         foreach (var pair in jointMap)
         {
             initialRotations[pair.Key] = pair.Value.localRotation;
-            GameObject cnt = Instantiate(txt, canvas); cnt.GetComponent<TMP_Text>().text = pair.Key;
-            Objects[pair.Key] = cnt.transform;
         }
-        Destroy(txt.gameObject);
+    }
+    private void Update()
+    {
+        
     }
 
     public void UpdateJson()
@@ -113,7 +114,7 @@ public class PoseModel : MonoBehaviour
                 (j.Value.z - mz) * Mz * 2f - 1f);
             Quaternion relativeRot = Quaternion.FromToRotation(TestPos, xyz);
             jointMap[j.Key].localRotation = initialRotations[j.Key] * relativeRot;
-            //Objects[j.Key].localPosition = xyz;
+            Objects[j.Key].localPosition = xyz;
         }
     }
 
