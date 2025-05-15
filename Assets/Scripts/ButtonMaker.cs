@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-
+#if UNITY_EDITOR
 [CustomEditor(typeof(Tongsin))]
 public class ButtonMaker : Editor
 {
@@ -28,3 +28,4 @@ public class ButtonMaker : Editor
 
     }
 }
+#endif
