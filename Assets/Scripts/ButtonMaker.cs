@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(BB))]
+[CustomEditor(typeof(Tongsin))]
 public class ButtonMaker : Editor
 {
     public override void OnInspectorGUI()
@@ -19,17 +19,10 @@ public class ButtonMaker : Editor
             PosePlayer.pp.UpdateJson(); PosePlayer.pp.UpdatePose();
         }*/
         GUILayout.Space(20);
-        if (GUILayout.Button("Refresh Pose_Model", GUILayout.Height(30)))
+        if (GUILayout.Button("Set Leg Gap", GUILayout.Height(30)))
         {
-            PoseModel.pm.UpdateJson(); PoseModel.pm.UpdatePose();
+            if(Tongsin.inst != null) Tongsin.inst.MakeGapOfLeg();
         }
-        GUILayout.Space(20);
-        if (GUILayout.Button("Refresh All", GUILayout.Height(30)))
-        {
-            //PosePlayer.pp.UpdateJson(); PosePlayer.pp.UpdatePose();
-            PoseModel.pm.UpdateJson(); PoseModel.pm.UpdatePose();
-        }
-
         GUILayout.FlexibleSpace();  
         EditorGUILayout.EndVertical();  
 

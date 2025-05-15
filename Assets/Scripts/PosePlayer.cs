@@ -7,21 +7,16 @@ using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
 
 public class PosePlayer : MonoBehaviour
 {
-	private PoseData_User poseData;
 	private Dictionary<int, Transform> jointMap;
 	private Dictionary<int, Quaternion> initialRotations;
 
 	Animator anim;
 
-	[SerializeField] private int currentFrame = 0;
-
-	String r = "Right";
-	String l = "Left";
-
 	void Start()
 	{
+		
 		anim = GetComponent<Animator>();
-		jointMap = new Dictionary<int, Transform>
+        jointMap = new Dictionary<int, Transform>
 		{
 			//{0,  FindBone("mixamorig:Head")},
 
@@ -42,17 +37,16 @@ public class PosePlayer : MonoBehaviour
 			{27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
 			{28,  anim.GetBoneTransform(HumanBodyBones.RightFoot)},
 		};
-        Vector3 modelForward = (jointMap[13].position - jointMap[11].position).normalized;
-        
-	}
+		Vector3 sub = Vector3.Cross((jointMap[12].position - jointMap[11].position).normalized, Vector3.up);
+		StartPos = transform.position;
+    }
 
-	public void UpdatePose(string text)
+	public void UpdatePose()
 	{
-		poseData = JsonConvert.DeserializeObject<PoseData_User>(text);
-
 		if(Posecor == null) Posecor = StartCoroutine(ApplyPose());
 	}
 
+	Vector3 StartPos;
     [SerializeField] private Vector3 Agle;
 	[SerializeField] private Vector3 Corr_Position;
     private void OnValidate()
@@ -63,15 +57,16 @@ public class PosePlayer : MonoBehaviour
 	Coroutine Posecor = null;
     Quaternion corr = Quaternion.Euler(Vector3.zero);
 
+	[SerializeField] float GapVar;
 	IEnumerator ApplyPose()
 	{
-		print("PoseStart!");
+		print($"{name}'s PoseStart!");
 		var WFS = new WaitForSeconds(0.1f);
 		while (true)
 		{
 			yield return WFS;
 			Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
-			foreach (var kp in poseData.landmarks)
+			foreach (var kp in Tongsin.inst.poseData.landmarks)
 			{
 				
 				landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
@@ -86,17 +81,15 @@ public class PosePlayer : MonoBehaviour
                 (p1.z + p2.z + p3.z + p4.z) * 0.25f);
 
 			
-
             Vector3 from, to, direction;
 			Quaternion rotation;
-			// 필요한 관절 위치 저장
+
+			// 허리
 			from = landmarkPositions[17];
 			to = (landmarkPositions[11] + landmarkPositions[12]) * 0.5f;
 			direction = (from - to).normalized;
 			rotation = Quaternion.LookRotation(direction) * corr;
-			jointMap[17].rotation = rotation;
-
-
+			//jointMap[17].rotation = rotation;
 
 
 			// 상반 ( 허리 제외 )
@@ -108,8 +101,6 @@ public class PosePlayer : MonoBehaviour
 				rotation = Quaternion.LookRotation(direction) * corr;
 				jointMap[i].rotation = rotation;
 			}
-			// 허리
-
 
 
 			// 하반
@@ -122,6 +113,14 @@ public class PosePlayer : MonoBehaviour
 				rotation *= corr;
 				jointMap[i].rotation = rotation;
 			}
+
+
+			
+			if(Tongsin.inst.GapOfLeg != -1)
+			{
+				float Gap = Tongsin.inst.GapOfLeg - Tongsin.inst.CurGap;
+				transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar * transform.localScale.y), StartPos.z);
+            }
 		}
     }
 }

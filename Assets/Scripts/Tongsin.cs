@@ -9,11 +9,19 @@ using UnityEngine;
 
 public class Tongsin : MonoBehaviour
 {
+    public static Tongsin inst = null;
     [SerializeField] List<PosePlayer> pp;
     ClientWebSocket ws = new ClientWebSocket();
     private CancellationTokenSource cancellation;
+
+    public PoseData_User poseData;
+
+    public float GapOfLeg = -1;
+    public float CurGap = -1;
+
     async void Start()
     {
+        if (inst == null) inst = this;
         cancellation = new CancellationTokenSource();
         ws = new ClientWebSocket();
         _ = ConnectWebSocket(cancellation.Token); // fire-and-forget
@@ -43,7 +51,6 @@ public class Tongsin : MonoBehaviour
             await Task.Delay(1000);
 
         }
-        print("Success!");
 
         Dictionary<string, string> j = new Dictionary<string, string>
         { { "type","register"}, { "userId", "user123" }, { "role","unity" } };
@@ -62,8 +69,17 @@ public class Tongsin : MonoBehaviour
         {
             var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             var msg = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            foreach(var jk in pp) jk.UpdatePose(msg);
+            poseData = JsonConvert.DeserializeObject<PoseData_User>(msg);
+            foreach (var jk in pp) jk.UpdatePose();
+            var cnt = poseData.landmarks;
+            CurGap = Mathf.Max(cnt[23].y - cnt[27].y, cnt[24].y - cnt[28].y);
         }
+    }
+
+    public void MakeGapOfLeg()
+    {
+        var cnt = poseData.landmarks;
+        GapOfLeg = Mathf.Max(cnt[23].y - cnt[27].y, cnt[24].y - cnt[28].y);
     }
 
     private async void OnApplicationQuit()

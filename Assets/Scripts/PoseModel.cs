@@ -91,7 +91,7 @@ public class PoseModel : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.Log("Load Fail!");
+            Debug.Log(e);
         }
     }
 
