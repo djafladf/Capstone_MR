@@ -12,7 +12,7 @@ public class Tongsin : MonoBehaviour
 {
     public static Tongsin inst = null;
     [SerializeField] List<PosePlayer> pp;
-    [SerializeField] string url_sub = "https://fowl-one-definitely.ngrok-free.app";
+    [SerializeField] string url_sub = "fowl-one-definitely.ngrok-free.app";
     ClientWebSocket ws = new ClientWebSocket();
     private CancellationTokenSource cancellation;
 
