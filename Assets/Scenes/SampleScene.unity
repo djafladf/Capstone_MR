@@ -8313,11 +8313,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pp:
-  - {fileID: 5258409431480167693}
   - {fileID: 6622377940250157246}
-  - {fileID: 1670156622}
-  - {fileID: 8806953388073487103}
-  - {fileID: 6896337639080006898}
   url_sub: fowl-one-definitely.ngrok-free.app
   poseData:
     landmarks: []
@@ -8394,7 +8390,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1729477157}
   - component: {fileID: 1729477156}
-  - component: {fileID: 1729477155}
+  - component: {fileID: 1729477158}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -8402,26 +8398,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1729477155
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1729477154}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
 --- !u!114 &1729477156
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8452,6 +8428,46 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1729477158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1729477154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab68ce6587aab0146b8dabefbd806791, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SendPointerHoverToParent: 1
+  m_ClickSpeed: 0.3
+  m_MoveDeadzone: 0.6
+  m_RepeatDelay: 0.5
+  m_RepeatRate: 0.1
+  m_TrackedDeviceDragThresholdMultiplier: 1.4
+  m_TrackedScrollDeltaMultiplier: 5
+  m_BypassUIToolkitEvents: 0
+  m_ActiveInputMode: 0
+  m_MaxTrackedDeviceRaycastDistance: 1000
+  m_EnableXRInput: 1
+  m_EnableMouseInput: 1
+  m_EnableTouchInput: 1
+  m_PointAction: {fileID: 0}
+  m_LeftClickAction: {fileID: 0}
+  m_MiddleClickAction: {fileID: 0}
+  m_RightClickAction: {fileID: 0}
+  m_ScrollWheelAction: {fileID: 0}
+  m_NavigateAction: {fileID: 0}
+  m_SubmitAction: {fileID: 0}
+  m_CancelAction: {fileID: 0}
+  m_EnableBuiltinActionsAsFallback: 1
+  m_EnableGamepadInput: 1
+  m_EnableJoystickInput: 1
+  m_HorizontalAxis: Horizontal
+  m_VerticalAxis: Vertical
+  m_SubmitButton: Submit
+  m_CancelButton: Cancel
 --- !u!1 &1828601335
 GameObject:
   m_ObjectHideFlags: 0
@@ -14714,7 +14730,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4889344933186292132
 Transform:
   m_ObjectHideFlags: 0
@@ -15070,7 +15086,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Agle: {x: -90, y: 0, z: 0}
-  Corr_Position: {x: 1, y: 2, z: 1}
+  Corr_Position: {x: 1, y: -2, z: 1}
   GapVar: -3
 --- !u!1 &5274428724720817500
 GameObject:
@@ -15841,7 +15857,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &5827330301481297223
 Transform:
   m_ObjectHideFlags: 0
@@ -16671,7 +16687,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.19, y: -0.71, z: 0}
-  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 7329880088396991852}
@@ -16698,7 +16714,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Agle: {x: -90, y: 0, z: 0}
   Corr_Position: {x: 1, y: 2, z: 1}
-  GapVar: 1
+  GapVar: -10
 --- !u!1 &6647200563216204072
 GameObject:
   m_ObjectHideFlags: 0

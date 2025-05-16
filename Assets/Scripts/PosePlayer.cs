@@ -31,8 +31,6 @@ public class PosePlayer : MonoBehaviour
 			{27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
 			{28, anim.GetBoneTransform(HumanBodyBones.RightFoot)},
 		};
-		Vector3 sub = Vector3.Cross((jointMap[12].position - jointMap[11].position).normalized, Vector3.up);
-		StartPos = transform.position;
         corr = Quaternion.Euler(Agle);
     }
 
@@ -42,17 +40,18 @@ public class PosePlayer : MonoBehaviour
 	}
 
 	Vector3 StartPos;
-    [SerializeField] private Vector3 Agle;
-	[SerializeField] private Vector3 Corr_Position;
+    [SerializeField] private Vector3 Agle = new Vector3(-90,0,0);
+	[SerializeField] private Vector3 Corr_Position = new Vector3(1,2,1);
 
 	Coroutine Posecor = null;
     Quaternion corr = Quaternion.Euler(Vector3.zero);
 
-	[SerializeField] float GapVar;
+	[SerializeField] float GapVar = -10;
 	IEnumerator ApplyPose()
 	{
-		print($"{name}'s PoseStart!");
-		var WFS = new WaitForSeconds(0.1f);
+		Tongsin.inst.MakeGapOfLeg();
+		Tongsin.inst.GapOfLeg = -0.222f;
+        var WFS = new WaitForSeconds(0.1f);
 		while (true)
 		{
 			yield return WFS;
@@ -60,7 +59,7 @@ public class PosePlayer : MonoBehaviour
 			foreach (var kp in Tongsin.inst.poseData.landmarks)
 			{
 #if UNITY_ANDROID && !UNITY_EDITOR
-				landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, -kp.y * Corr_Position.y, kp.z * Corr_Position.z);
+				landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
 #else
 				landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
 #endif
@@ -81,6 +80,7 @@ public class PosePlayer : MonoBehaviour
 			to = (landmarkPositions[11] + landmarkPositions[12]) * 0.5f;
 			direction = (from - to).normalized;
 			rotation = Quaternion.LookRotation(direction) * corr;
+			jointMap[17].rotation = rotation;
 
 			for (int i = 11; i <= 14; i++)
 			{
@@ -103,7 +103,7 @@ public class PosePlayer : MonoBehaviour
 			if(Tongsin.inst.GapOfLeg != -1)
 			{
 				float Gap = Tongsin.inst.GapOfLeg - Tongsin.inst.CurGap;
-				transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar * transform.localScale.y), StartPos.z);
+				transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar), StartPos.z);
             }
 		}
     }
