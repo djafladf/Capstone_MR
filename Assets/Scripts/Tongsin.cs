@@ -6,11 +6,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using static System.Net.WebRequestMethods;
 
 public class Tongsin : MonoBehaviour
 {
     public static Tongsin inst = null;
     [SerializeField] List<PosePlayer> pp;
+    [SerializeField] string url_sub = "fowl-one-definitely.ngrok-free.app";
     ClientWebSocket ws = new ClientWebSocket();
     private CancellationTokenSource cancellation;
 
@@ -27,7 +29,7 @@ public class Tongsin : MonoBehaviour
         _ = ConnectWebSocket(cancellation.Token); // fire-and-forget
     }
 
-    [SerializeField] string url_sub;
+    
     async Task ConnectWebSocket(CancellationToken token)
     {
         var uri = new Uri($"wss://{url_sub}/ws/pose");
