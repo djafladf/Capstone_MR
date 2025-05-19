@@ -26,11 +26,9 @@ public class Point
     public float z;
 }
 
-
 [System.Serializable]
 public class PoseData_User
 {
-    public string deviceId;
     public List<landmarks> landmarks;
 }
 
