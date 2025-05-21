@@ -6,20 +6,18 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using static System.Net.WebRequestMethods;
 
 public class Tongsin : MonoBehaviour
 {
     public static Tongsin inst = null;
     [SerializeField] List<PosePlayer> pp;
-    [SerializeField] string url_sub = "fowl-one-definitely.ngrok-free.app";
     ClientWebSocket ws = new ClientWebSocket();
     private CancellationTokenSource cancellation;
 
-    public PoseData_User poseData;
+    public Dictionary<string, List<landmarks>> poseData = new Dictionary<string, List<landmarks>>();
 
-    public float GapOfLeg = -1;
-    public float CurGap = -1;
+    public Dictionary<string, float> GapOfLeg = new Dictionary<string, float>();
+    public Dictionary<string, float> CurGap = new Dictionary<string, float>();
 
     async void Start()
     {
@@ -29,13 +27,12 @@ public class Tongsin : MonoBehaviour
         _ = ConnectWebSocket(cancellation.Token); // fire-and-forget
     }
 
-    
+    [SerializeField] string url_sub;
     async Task ConnectWebSocket(CancellationToken token)
     {
         var uri = new Uri($"wss://{url_sub}/ws/pose");
         while (ws.State != WebSocketState.Open)
         {
-            print(ws.State);
             if (token.IsCancellationRequested) return;
             try
             {
@@ -45,7 +42,6 @@ public class Tongsin : MonoBehaviour
             {
                 if (ws.State != WebSocketState.Open)
                 {
-                    print("Connection Fail! Retry...");
                     ws.Dispose();
                     ws = new ClientWebSocket();
                 }
@@ -71,17 +67,26 @@ public class Tongsin : MonoBehaviour
         {
             var result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             var msg = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            poseData = JsonConvert.DeserializeObject<PoseData_User>(msg);
-            foreach (var jk in pp) jk.UpdatePose();
-            var cnt = poseData.landmarks;
-            CurGap = Mathf.Max(cnt[23].y - cnt[27].y, cnt[24].y - cnt[28].y);
+            var pose = JsonConvert.DeserializeObject<PoseData_User>(msg);
+            poseData[pose.deviceId] = pose.landmarks;
+            var cnt = pose.landmarks;
+            if (!GapOfLeg.ContainsKey(pose.deviceId))
+            {
+                GapOfLeg[pose.deviceId] = 0.5f * ((cnt[23].y - cnt[27].y) + (cnt[24].y - cnt[28].y));
+            }
+
+            foreach (var jk in pp) if(jk.DeviceId == pose.deviceId)
+                {
+                    jk.UpdatePose(); 
+                }
+
+            CurGap[pose.deviceId] = 0.5f * ((cnt[23].y - cnt[27].y) + (cnt[24].y - cnt[28].y));
         }
     }
 
-    public void MakeGapOfLeg()
+    public void MakeGapOfLeg(string id)
     {
-        var cnt = poseData.landmarks;
-        GapOfLeg = Mathf.Max(cnt[23].y - cnt[27].y, cnt[24].y - cnt[28].y);
+        
     }
 
     private async void OnApplicationQuit()

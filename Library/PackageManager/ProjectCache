@@ -5,16 +5,16 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638828985980785126
-    m_Hash: 85449251
+      ticks: 638832381237249067
+    m_Hash: 1260762048
   m_LockFileStatus:
     m_FilePath: C:/UnityProjects/Capstone_MR3/Packages/packages-lock.json
     m_PathExists: 1
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638828985980843181
-    m_Hash: 2725787137
+      ticks: 638832381237388330
+    m_Hash: 3020109239
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
 m_LocalPackages:
