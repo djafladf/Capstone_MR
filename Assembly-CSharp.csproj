@@ -10,7 +10,7 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{91BF489A-425D-B1CC-FCB0-75FC57DDE392}</ProjectGuid>
+    <ProjectGuid>{2DA5325D-A49E-FF5E-67E0-692ED31263FD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AssemblyName>Assembly-CSharp</AssemblyName>
@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Vars.cs" />
+    <Compile Include="Assets\Scripts\PosePlayerGuide.cs" />
     <Compile Include="Assets\Scripts\PosePlayer.cs" />
     <Compile Include="Assets\Scripts\Tongsin.cs" />
   </ItemGroup>
