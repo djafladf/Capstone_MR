@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PosePlayerGuide : MonoBehaviour
 {
-    private Dictionary<int, Transform> jointMap;
+    public Dictionary<int, Transform> jointMap;
     private Dictionary<int, Quaternion> initialRotations;
     private Dictionary<int, Vector3> LastValue = new Dictionary<int, Vector3>();
     private List<IdealFrame> idealPose;

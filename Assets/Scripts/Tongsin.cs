@@ -10,7 +10,7 @@ using UnityEngine;
 public class Tongsin : MonoBehaviour
 {
     public static Tongsin inst = null;
-    [SerializeField] List<PosePlayer> pp;
+    public List<PosePlayer>  pp = new List<PosePlayer>();
     ClientWebSocket ws = new ClientWebSocket();
     private CancellationTokenSource cancellation;
 
@@ -19,7 +19,7 @@ public class Tongsin : MonoBehaviour
     public Dictionary<string, float> GapOfLeg = new Dictionary<string, float>();
     public Dictionary<string, float> CurGap = new Dictionary<string, float>();
 
-    async void Start()
+    async void Awake()
     {
         if (inst == null) inst = this;
         cancellation = new CancellationTokenSource();
@@ -33,6 +33,7 @@ public class Tongsin : MonoBehaviour
         var uri = new Uri($"wss://{url_sub}/ws/pose");
         while (ws.State != WebSocketState.Open)
         {
+            print(ws.State);
             if (token.IsCancellationRequested) return;
             try
             {
@@ -49,6 +50,7 @@ public class Tongsin : MonoBehaviour
             await Task.Delay(1000);
 
         }
+        print("Register Success!");
 
         Dictionary<string, string> j = new Dictionary<string, string>
         { { "type","register"}, { "userId", "user123" }, { "role","unity" } };

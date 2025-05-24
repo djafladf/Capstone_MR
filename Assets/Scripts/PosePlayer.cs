@@ -8,7 +8,7 @@ using System.IO;
 public class PosePlayer : MonoBehaviour
 {
     public string DeviceId;
-    private Dictionary<int, Transform> jointMap;
+    public Dictionary<int, Transform> jointMap;
     private Dictionary<int, Quaternion> initialRotations;
     private Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
     private Dictionary<int, Vector3> LastValue = new Dictionary<int, Vector3>();
@@ -23,15 +23,16 @@ public class PosePlayer : MonoBehaviour
 
     private Quaternion corr = Quaternion.Euler(Vector3.zero);
     private Vector3 StartPos;
-    private float Threshold = 0;
+    private float Threshold = 1.5f;
     private float GapVar = -2.3f;
     private int frameIndex = 0;
     private float liveScore = 100f;
 
-    private List<IdealFrame> idealPose; // 수정된 구조
+    private List<IdealFrame> idealPose;
 
     void Start()
     {
+        if (name.Contains("Device")) { Tongsin.inst.pp.Add(this);  Debug.Log($"Register {name}"); }
         anim = GetComponent<Animator>();
         DeviceId = name;
 
@@ -54,6 +55,7 @@ public class PosePlayer : MonoBehaviour
 
         StartPos = transform.position;
         corr = Quaternion.Euler(Agle);
+        SpineCorrRotation = Quaternion.Euler(SpineCorrTarget);
         LoadPoseJson();
     }
 
@@ -86,14 +88,21 @@ public class PosePlayer : MonoBehaviour
     IEnumerator ApplyPose()
     {
         var WFS = new WaitForSeconds(0.05f);
-
+        print($"Start Pose of {name}");
+        var user = Tongsin.inst.poseData[DeviceId];
+        foreach (var kp in user)
+        {
+            Vector3 pos = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
+            landmarkPositions[kp.id] = pos;
+        }
+        PoseSub(true);
         while (true)
         {
             yield return WFS;
 
             if (!Tongsin.inst.poseData.ContainsKey(DeviceId)) continue;
 
-            var user = Tongsin.inst.poseData[DeviceId];
+            user = Tongsin.inst.poseData[DeviceId];
 
             foreach (var kp in user)
             {
@@ -116,7 +125,18 @@ public class PosePlayer : MonoBehaviour
             liveScore = Mathf.Clamp(liveScore, 0f, 100f);
 
             if (scoreText != null)
-                scoreText.text = $"Score: {liveScore:F1}";
+            {
+                scoreText.text = $"{liveScore:F1}";
+
+                if (liveScore >= 50f)
+                    scoreText.color = Color.green;
+                else if (liveScore >= 20f)
+                    scoreText.color = new Color(1f, 0.5f, 0f); // 주황
+                else
+                    scoreText.color = Color.red;
+            }
+
+
 
             frameIndex++;
         }
@@ -139,7 +159,22 @@ public class PosePlayer : MonoBehaviour
         return count > 0 ? total / count : 0f;
     }
 
-    void PoseSub()
+
+    public float GetLiveScore()
+    {
+        return liveScore;
+    }
+
+    private void OnValidate()
+    {
+        SpineCorrRotation = Quaternion.Euler(SpineCorrTarget);
+    }
+
+
+    Vector3 SpineTarget = Vector3.right;
+    Vector3 SpineCorrTarget = new Vector3(-1,2,1);
+    Quaternion SpineCorrRotation;
+    void PoseSub(bool OnTest = false)
     {
         Vector3 from, to, direction;
         Quaternion rotation;
@@ -152,13 +187,31 @@ public class PosePlayer : MonoBehaviour
             (sub1 * (p3.y - p4.y) - (p1.y - p2.y) * sub2),
             (p1.z + p2.z + p3.z + p4.z) * 0.25f);
 
+
+        // 허리 회전
+        Vector3 dir = (landmarkPositions[11] - landmarkPositions[12]).normalized; // 이론 상으론 (1,0,0)이 되야 됨
+        rotation = Quaternion.FromToRotation(dir,SpineTarget) * SpineCorrRotation;
+        jointMap[17].rotation = rotation;
+
+        // 골반 회전 = Object 회전
+        dir = (landmarkPositions[23] - landmarkPositions[24]).normalized;
+        rotation = Quaternion.FromToRotation(dir, SpineTarget) * SpineCorrRotation;
+        transform.rotation = rotation;
+        
+
+        /*from = landmarkPositions[17];
+        to = (landmarkPositions[11] + landmarkPositions[12]) * 0.5f;
+        direction = (from - to).normalized;
+        rotation = Quaternion.LookRotation(direction) * corr;
+        jointMap[17].rotation = rotation;*/
+
         for (int i = 11; i <= 14; i++)
         {
             from = landmarkPositions[i];
             to = landmarkPositions[i + 2];
             direction = (to - from).normalized;
             float angleGap = Vector3.Angle(LastValue.ContainsKey(i) ? LastValue[i] : direction, direction);
-            if (angleGap >= Threshold)
+            if (angleGap >= Threshold || OnTest)
             {
                 rotation = Quaternion.LookRotation(direction) * corr;
                 jointMap[i].rotation = rotation;
@@ -172,7 +225,7 @@ public class PosePlayer : MonoBehaviour
             to = landmarkPositions[i + 2];
             direction = (to - from).normalized;
             float angleGap = Vector3.Angle(LastValue.ContainsKey(i) ? LastValue[i] : direction, direction);
-            if (angleGap >= Threshold)
+            if (angleGap >= Threshold || OnTest)
             {
                 rotation = Quaternion.LookRotation(direction) * corr;
                 jointMap[i].rotation = rotation;
@@ -184,7 +237,7 @@ public class PosePlayer : MonoBehaviour
         to = 0.5f * (landmarkPositions[30] + landmarkPositions[32]);
         direction = (to - from).normalized;
         float ag1 = Vector3.Angle(LastValue.ContainsKey(28) ? LastValue[28] : direction, direction);
-        if (ag1 >= Threshold)
+        if (ag1 >= Threshold || OnTest)
         {
             jointMap[28].rotation = Quaternion.LookRotation(direction) * corr;
             LastValue[28] = direction;
@@ -194,13 +247,17 @@ public class PosePlayer : MonoBehaviour
         to = 0.5f * (landmarkPositions[29] + landmarkPositions[31]);
         direction = (to - from).normalized;
         float ag2 = Vector3.Angle(LastValue.ContainsKey(27) ? LastValue[27] : direction, direction);
-        if (ag2 >= Threshold)
+        if (ag2 >= Threshold || OnTest)
         {
             jointMap[27].rotation = Quaternion.LookRotation(direction) * corr;
             LastValue[27] = direction;
         }
+        float Gap = Tongsin.inst.GapOfLeg[DeviceId] - Tongsin.inst.CurGap[DeviceId];
+        transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar * transform.localScale.y), StartPos.z);
     }
 }
+
+
 
 [System.Serializable]
 public class IdealFrame
