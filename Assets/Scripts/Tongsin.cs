@@ -76,13 +76,13 @@ public class Tongsin : MonoBehaviour
             {
                 GapOfLeg[pose.deviceId] = 0.5f * ((cnt[23].y - cnt[27].y) + (cnt[24].y - cnt[28].y));
             }
-
+            CurGap[pose.deviceId] = 0.5f * ((cnt[23].y - cnt[27].y) + (cnt[24].y - cnt[28].y));
             foreach (var jk in pp) if(jk.DeviceId == pose.deviceId)
                 {
                     jk.UpdatePose(); 
                 }
 
-            CurGap[pose.deviceId] = 0.5f * ((cnt[23].y - cnt[27].y) + (cnt[24].y - cnt[28].y));
+            
         }
     }
 

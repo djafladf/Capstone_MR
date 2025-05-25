@@ -23,7 +23,7 @@ public class PosePlayer : MonoBehaviour
 
     private Quaternion corr = Quaternion.Euler(Vector3.zero);
     private Vector3 StartPos;
-    private float Threshold = 1.5f;
+    [SerializeField]private float Threshold = 1.5f;
     private float GapVar = -2.3f;
     private int frameIndex = 0;
     private float liveScore = 100f;
@@ -38,7 +38,6 @@ public class PosePlayer : MonoBehaviour
 
         jointMap = new Dictionary<int, Transform>
         {
-            {1, transform},
             {11, anim.GetBoneTransform(HumanBodyBones.LeftUpperArm)},
             {12, anim.GetBoneTransform(HumanBodyBones.RightUpperArm)},
             {13, anim.GetBoneTransform(HumanBodyBones.LeftLowerArm)},
@@ -53,7 +52,8 @@ public class PosePlayer : MonoBehaviour
             {27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
             {28, anim.GetBoneTransform(HumanBodyBones.RightFoot)},
         };
-        foreach (var joint in jointMap.Keys) LastValue[joint] = Vector3.zero;
+        foreach (var joint in jointMap.Keys) LastValue[joint] = Vector3.right;
+        LastValue[1] = Vector3.right;
 
         StartPos = transform.position;
         corr = Quaternion.Euler(Agle);
@@ -98,6 +98,8 @@ public class PosePlayer : MonoBehaviour
             landmarkPositions[kp.id] = pos;
         }
         PoseSub(true);
+        foreach (var j in LastValue) print(j.Value);
+
         while (true)
         {
             yield return WFS;
@@ -207,8 +209,6 @@ public class PosePlayer : MonoBehaviour
             // 골반 회전 = Object 회전
         dir = (landmarkPositions[23] - landmarkPositions[24]).normalized;
 
-            LastValue[-1] = dir;
-
         float angleGapHip = Vector3.Angle(LastValue[1], dir);
         if (angleGapHip >= Threshold || OnInit)
         {
@@ -221,7 +221,7 @@ public class PosePlayer : MonoBehaviour
         {
             from = landmarkPositions[i];
             to = landmarkPositions[i + 2];
-            direction = (to - from).normalized;
+            dir = (to - from).normalized;
             float angleGap = Vector3.Angle(LastValue[i],dir);
             if (angleGap >= Threshold || OnInit)
             {
@@ -235,7 +235,7 @@ public class PosePlayer : MonoBehaviour
         {
             from = landmarkPositions[i];
             to = landmarkPositions[i + 2];
-            direction = (to - from).normalized;
+            dir = (to - from).normalized;
             float angleGap = Vector3.Angle(LastValue[i], dir);
             if (angleGap >= Threshold || OnInit)
             {
@@ -258,7 +258,7 @@ public class PosePlayer : MonoBehaviour
 
         from = landmarkPositions[27];
         to = 0.5f * (landmarkPositions[29] + landmarkPositions[31]);
-        direction = (to - from).normalized;
+        dir = (to - from).normalized;
         float ag2 = Vector3.Angle(LastValue[27], dir);
         if (ag2 >= Threshold || OnInit)
         {
@@ -266,8 +266,9 @@ public class PosePlayer : MonoBehaviour
             LastValue[27] = dir;
         }
 
+
         float Gap = Tongsin.inst.GapOfLeg[DeviceId] - Tongsin.inst.CurGap[DeviceId];
-        if (Mathf.Abs(Gap - LastHeightGap) > 0.01f)
+        if (Mathf.Abs(Gap - LastHeightGap) > 0.05f)
         {
             LastHeightGap = Gap;
             transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar * transform.localScale.y), StartPos.z);
