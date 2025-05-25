@@ -10,15 +10,10 @@ public class PoseComparer : MonoBehaviour
 
     private Dictionary<int, string> jointToPart = new Dictionary<int, string>
     {
-        {11, "LeftArm"},
-        {12, "RightArm"},
-        {13, "LeftForeArm"},
-        {14, "RightForeArm"},
         {23, "LeftUpLeg"},
         {24, "RightUpLeg"},
         {25, "LeftLeg"},
-        {26, "RightLeg"},
-        {17, "Spine"}
+        {26, "RightLeg"}
     };
 
     private Dictionary<string, Material> partMaterials = new Dictionary<string, Material>();
@@ -36,7 +31,7 @@ public class PoseComparer : MonoBehaviour
                 Renderer rend = part.GetComponent<Renderer>();
                 if (rend != null)
                 {
-                    Material mat = rend.material; // 인스턴스화
+                    Material mat = rend.material;
                     partMaterials[partName] = mat;
 
                     if (mat.HasProperty("_BaseColor"))
@@ -68,13 +63,13 @@ public class PoseComparer : MonoBehaviour
                 if (mat.HasProperty("_BaseColor"))
                 {
                     if (angle < 10f)
-                        mat.SetColor("_BaseColor", originalColors[partName]); // 정상
+                        mat.SetColor("_BaseColor", originalColors[partName]);
                     else if (angle < 20f)
-                        mat.SetColor("_BaseColor", Color.yellow); // 약간 틀림
+                        mat.SetColor("_BaseColor", Color.yellow);
                     else if (angle < 40f)
-                        mat.SetColor("_BaseColor", new Color(1f, 0.5f, 0f)); // 많이 틀림 (주황)
+                        mat.SetColor("_BaseColor", new Color(1f, 0.5f, 0f));
                     else
-                        mat.SetColor("_BaseColor", Color.red); // 아주 많이 틀림
+                        mat.SetColor("_BaseColor", Color.red);
                 }
                 else
                 {
