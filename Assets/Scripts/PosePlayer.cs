@@ -24,7 +24,7 @@ public class PosePlayer : MonoBehaviour
     private Quaternion corr = Quaternion.Euler(Vector3.zero);
     private Vector3 StartPos;
     [SerializeField]private float Threshold = 1.5f;
-    private float GapVar = -1.8f;
+    private float GapVar = -2.3f;
     private int frameIndex = 0;
     private float liveScore = 100f;
 
@@ -32,7 +32,7 @@ public class PosePlayer : MonoBehaviour
 
     void Start()
     {
-        if (name.Contains("Device")) { Tongsin.inst.pp.Add(this); Debug.Log($"Register {name}"); }
+        if (name.Contains("Device")) { Tongsin.inst.pp.Add(this);  Debug.Log($"Register {name}"); }
         anim = GetComponent<Animator>();
         DeviceId = name;
 
@@ -52,8 +52,6 @@ public class PosePlayer : MonoBehaviour
             {27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
             {28, anim.GetBoneTransform(HumanBodyBones.RightFoot)},
         };
-        float tnt = jointMap[11].position.y - jointMap[27].position.y;
-        GapVar = tnt * 1.2f / 1.3f;
         foreach (var joint in jointMap.Keys) LastValue[joint] = Vector3.right;
         LastValue[1] = Vector3.right;
 
@@ -187,6 +185,14 @@ public class PosePlayer : MonoBehaviour
         Vector3 from, to, direction;
         Quaternion rotation;
 
+        Vector3 p1 = landmarkPositions[11], p2 = landmarkPositions[24], p3 = landmarkPositions[12], p4 = landmarkPositions[23];
+        float midsub = 1.0f / ((p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x));
+        float sub1 = (p1.x * p2.y - p1.y * p2.x), sub2 = (p3.x * p4.y - p3.y * p4.x);
+
+        landmarkPositions[17] = new Vector3((sub1 * (p3.x - p4.x) - (p1.x - p2.x) * sub2) * midsub,
+            (sub1 * (p3.y - p4.y) - (p1.y - p2.y) * sub2),
+            (p1.z + p2.z + p3.z + p4.z) * 0.25f);
+
 
             // 허리 회전
         Vector3 dir = (landmarkPositions[11] - landmarkPositions[12]).normalized; // 이론 상으론 (1,0,0)이 되야 됨
@@ -242,7 +248,7 @@ public class PosePlayer : MonoBehaviour
         // 종아리 부분은 다르게 처리
         from = landmarkPositions[28];
         to = 0.5f * (landmarkPositions[30] + landmarkPositions[32]);
-        dir = (to - from).normalized;
+        direction = (to - from).normalized;
         float ag1 = Vector3.Angle(LastValue[28], dir);
         if (ag1 >= Threshold || OnInit)
         {
@@ -265,7 +271,7 @@ public class PosePlayer : MonoBehaviour
         if (Mathf.Abs(Gap - LastHeightGap) > 0.05f)
         {
             LastHeightGap = Gap;
-            transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar), StartPos.z);
+            transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar * transform.localScale.y), StartPos.z);
         }
     }
 }
