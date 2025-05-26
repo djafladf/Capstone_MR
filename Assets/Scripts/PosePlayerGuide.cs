@@ -2,6 +2,7 @@ using Newtonsoft.Json;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR.OpenXR.Input;
 
 public class PosePlayerGuide : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class PosePlayerGuide : MonoBehaviour
     private Dictionary<int, Vector3> LastValue = new Dictionary<int, Vector3>();
     private List<IdealFrame> idealPose;
 
+    [SerializeField] float Gaap;
     private int frameIndex = 0;
     private float Threshold = 0;
     private Quaternion corr;
@@ -40,6 +42,9 @@ public class PosePlayerGuide : MonoBehaviour
             {28, anim.GetBoneTransform(HumanBodyBones.RightFoot)},
         };
 
+        print($"{name} : {jointMap[11].position - jointMap[27].position}");
+
+        StartPos = transform.position;
         LoadPoseJson();
         StartCoroutine(PlayIdealPose());
     }
@@ -61,10 +66,12 @@ public class PosePlayerGuide : MonoBehaviour
     IEnumerator PlayIdealPose()
     {
         var WFS = new WaitForSeconds(0.05f);
+        var frame = idealPose[0];
+        ApplyPose(frame.pose,true);
         while (true)
         {
             if (idealPose == null || idealPose.Count == 0) yield break;
-            var frame = idealPose[frameIndex % idealPose.Count];
+            frame = idealPose[frameIndex % idealPose.Count];
 
             ApplyPose(frame.pose);
 
@@ -73,7 +80,7 @@ public class PosePlayerGuide : MonoBehaviour
         }
     }
 
-    void ApplyPose(List<Joint> joints)
+    void ApplyPose(List<Joint> joints,bool I = false)
     {
         Dictionary<int, Vector3> landmarks = new Dictionary<int, Vector3>();
 
@@ -83,10 +90,13 @@ public class PosePlayerGuide : MonoBehaviour
             landmarks[joint.index] = pos;
         }
 
-        ApplyRotation(landmarks);
+        ApplyRotation(landmarks,I);
     }
 
-    void ApplyRotation(Dictionary<int, Vector3> pos)
+    float GapOfLeg = 100000, CurGap;
+    Vector3 StartPos;
+
+    void ApplyRotation(Dictionary<int, Vector3> pos,bool OnInit = false)
     {
         Vector3 from, to, direction;
         Quaternion rotation;
@@ -138,5 +148,31 @@ public class PosePlayerGuide : MonoBehaviour
                 LastValue[i] = direction;
             }
         }
+
+        // 종아리 부분은 다르게 처리
+        from = pos[28];
+        to = 0.5f * (pos[30] + pos[32]);
+        direction = (to - from).normalized;
+        float ag1 = Vector3.Angle(LastValue[28], direction);
+        if (ag1 >= Threshold || OnInit)
+        {
+            jointMap[28].rotation = Quaternion.LookRotation(direction) * corr;
+            LastValue[28] = direction;
+        }
+
+        from = pos[27];
+        to = 0.5f * (pos[29] + pos[31]);
+        direction = (to - from).normalized;
+        float ag2 = Vector3.Angle(LastValue[27], direction);
+        if (ag2 >= Threshold || OnInit)
+        {
+            jointMap[27].rotation = Quaternion.LookRotation(direction) * corr;
+            LastValue[27] = direction;
+        }
+
+        CurGap = -0.5f * ((pos[23].y - pos[27].y) + (pos[24].y - pos[28].y));
+        if (OnInit) GapOfLeg = CurGap;
+        float Gap = GapOfLeg - CurGap;
+        transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * Gaap * transform.localScale.y), StartPos.z);
     }
 }

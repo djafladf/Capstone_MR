@@ -43,7 +43,8 @@ public class PoseComparer : MonoBehaviour
         }
     }
 
-    void Update()
+    float vv = 1 / 90f;
+    void FixedUpdate()
     {
         foreach (var pair in jointToPart)
         {
@@ -56,20 +57,22 @@ public class PoseComparer : MonoBehaviour
             Quaternion userRot = userPose.jointMap[jointId].rotation;
             Quaternion guideRot = guidePose.jointMap[jointId].rotation;
 
-            float angle = Quaternion.Angle(userRot, guideRot);
+            float angle = Quaternion.Angle(userRot, guideRot) * vv;
+            
 
             if (partMaterials.TryGetValue(partName, out Material mat))
             {
                 if (mat.HasProperty("_BaseColor"))
                 {
-                    if (angle < 10f)
+                    mat.SetColor("_BaseColor", Color.red * angle + Color.white * (1-angle));
+/*                    if (angle < 10f)
                         mat.SetColor("_BaseColor", originalColors[partName]);
                     else if (angle < 20f)
                         mat.SetColor("_BaseColor", Color.yellow);
                     else if (angle < 40f)
                         mat.SetColor("_BaseColor", new Color(1f, 0.5f, 0f));
                     else
-                        mat.SetColor("_BaseColor", Color.red);
+                        mat.SetColor("_BaseColor", Color.red);*/
                 }
                 else
                 {
