@@ -1,182 +1,289 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
+using TMPro;
+using System.IO;
 
 public class PosePlayer : MonoBehaviour
 {
-	public string DeviceId;
-	private Dictionary<int, Transform> jointMap;
-	private Dictionary<int, Quaternion> initialRotations;
+    public string DeviceId;
+    public Dictionary<int, Transform> jointMap;
+    private Dictionary<int, Quaternion> initialRotations;
+    private Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
+    private Dictionary<int, Vector3> LastValue = new Dictionary<int, Vector3>();
 
-	Animator anim;
+    Animator anim;
+    Coroutine Posecor = null;
 
-	void Start()
-	{
-		
-		anim = GetComponent<Animator>();
-        jointMap = new Dictionary<int, Transform>
-		{
-			//{0,  FindBone("mixamorig:Head")},
+    [SerializeField] private Vector3 Agle;
+    [SerializeField] private Vector3 Corr_Position = Vector3.one;
+    [SerializeField] private TextAsset idealPoseJson;
+    [SerializeField] private TextMeshProUGUI scoreText;
 
-			{11, anim.GetBoneTransform(HumanBodyBones.LeftUpperArm)},        // Left Shoulder
-			{12, anim.GetBoneTransform(HumanBodyBones.RightUpperArm)},       // Right Shoulder
-			{13, anim.GetBoneTransform(HumanBodyBones.LeftLowerArm)},    // Left Elbow
-			{14, anim.GetBoneTransform(HumanBodyBones.RightLowerArm)},   // Right Elbow
-			{15, anim.GetBoneTransform(HumanBodyBones.LeftHand)},       // Left Wrist
-			{16, anim.GetBoneTransform(HumanBodyBones.RightHand)},      // Right Wrist
+    private Quaternion corr = Quaternion.Euler(Vector3.zero);
+    private Vector3 StartPos;
+    [SerializeField]private float Threshold = 1.5f;
+    [SerializeField]private float GapVar = -1.8f;
+    private int frameIndex = 0;
+    private float liveScore = 100f;
 
-			{17, anim.GetBoneTransform(HumanBodyBones.Spine) },
-			//{18, FindBone($"mixamorig:Hips") },
+    private List<IdealFrame> idealPose;
 
-			{23, anim.GetBoneTransform(HumanBodyBones.LeftUpperLeg)},
-			{24, anim.GetBoneTransform(HumanBodyBones.RightUpperLeg)},
-			{25, anim.GetBoneTransform(HumanBodyBones.LeftLowerLeg)},
-			{26, anim.GetBoneTransform(HumanBodyBones.RightLowerLeg)},
-			{27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
-			{28,  anim.GetBoneTransform(HumanBodyBones.RightFoot)},
-		};
-		Vector3 sub = Vector3.Cross((jointMap[12].position - jointMap[11].position).normalized, Vector3.up);
-		StartPos = transform.position;
-
+    void Start()
+    {
+        if (name.Contains("Device")) { Tongsin.inst.pp.Add(this); Debug.Log($"Register {name}"); }
+        anim = GetComponent<Animator>();
         DeviceId = name;
 
-		LastValue = new Dictionary<int, Vector3>();
+        jointMap = new Dictionary<int, Transform>
+        {
+            {11, anim.GetBoneTransform(HumanBodyBones.LeftUpperArm)},
+            {12, anim.GetBoneTransform(HumanBodyBones.RightUpperArm)},
+            {13, anim.GetBoneTransform(HumanBodyBones.LeftLowerArm)},
+            {14, anim.GetBoneTransform(HumanBodyBones.RightLowerArm)},
+            {15, anim.GetBoneTransform(HumanBodyBones.LeftHand)},
+            {16, anim.GetBoneTransform(HumanBodyBones.RightHand)},
+            {17, anim.GetBoneTransform(HumanBodyBones.Spine)},
+            {23, anim.GetBoneTransform(HumanBodyBones.LeftUpperLeg)},
+            {24, anim.GetBoneTransform(HumanBodyBones.RightUpperLeg)},
+            {25, anim.GetBoneTransform(HumanBodyBones.LeftLowerLeg)},
+            {26, anim.GetBoneTransform(HumanBodyBones.RightLowerLeg)},
+            {27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
+            {28, anim.GetBoneTransform(HumanBodyBones.RightFoot)},
+        };
+        float tnt = jointMap[11].position.y - jointMap[27].position.y;
+        GapVar = tnt * 1.2f / 1.3f;
+        foreach (var joint in jointMap.Keys) LastValue[joint] = Vector3.right;
+        LastValue[1] = Vector3.right;
+
+        StartPos = transform.position;
+        corr = Quaternion.Euler(Agle);
+        SpineCorrRotation = Quaternion.Euler(SpineCorrTarget);
+        LoadPoseJson();
     }
 
-	public void UpdatePose()
-	{
-		if(Posecor == null) Posecor = StartCoroutine(ApplyPose());
-	}
+    void LoadPoseJson()
+    {
+        idealPoseJson = Resources.Load<TextAsset>("ideal_pose");
 
-	Vector3 StartPos;
-    [SerializeField] private Vector3 Agle;
-	[SerializeField] private Vector3 Corr_Position;
+        if (idealPoseJson == null)
+        {
+            Debug.LogError("[PosePlayer] Resources 폴더에 'ideal_pose.json'이 없습니다.");
+            return;
+        }
+
+        try
+        {
+            idealPose = JsonConvert.DeserializeObject<List<IdealFrame>>(idealPoseJson.text);
+            Debug.Log("[PosePlayer] ideal_pose.json 정상 로딩 완료. 프레임 수: " + idealPose.Count);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("[PosePlayer] JSON 파싱 실패: " + e.Message);
+        }
+    }
+
+    public void UpdatePose()
+    {
+        if (Posecor == null) Posecor = StartCoroutine(ApplyPose());
+    }
+
+    IEnumerator ApplyPose()
+    {
+        var WFS = new WaitForSeconds(0.05f);
+        print($"Start Pose of {name}");
+        var user = Tongsin.inst.poseData[DeviceId];
+        foreach (var kp in user)
+        {
+            Vector3 pos = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
+            landmarkPositions[kp.id] = pos;
+        }
+        PoseSub(true);
+        foreach (var j in LastValue) print(j.Value);
+
+        while (true)
+        {
+            yield return WFS;
+
+            if (!Tongsin.inst.poseData.ContainsKey(DeviceId)) continue;
+
+            user = Tongsin.inst.poseData[DeviceId];
+
+            foreach (var kp in user)
+            {
+                Vector3 pos = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
+                landmarkPositions[kp.id] = pos;
+            }
+
+            PoseSub();
+
+            if (frameIndex >= idealPose.Count) frameIndex = 0;
+
+            var ideal = idealPose[frameIndex].pose;
+            float error = CalculatePoseDistance(landmarkPositions, ideal);
+
+            if (error < 0.5f)
+                liveScore += 10f * Time.deltaTime;
+            else
+                liveScore -= error * 5f * Time.deltaTime;
+
+            liveScore = Mathf.Clamp(liveScore, 0f, 100f);
+
+            if (scoreText != null)
+            {
+                scoreText.text = $"{liveScore:F1}";
+
+                if (liveScore >= 50f)
+                    scoreText.color = Color.green;
+                else if (liveScore >= 20f)
+                    scoreText.color = new Color(1f, 0.5f, 0f); // 주황
+                else
+                    scoreText.color = Color.red;
+            }
+
+
+
+            frameIndex++;
+        }
+    }
+
+    float CalculatePoseDistance(Dictionary<int, Vector3> user, List<Joint> ideal)
+    {
+        float total = 0f;
+        int count = 0;
+
+        foreach (var joint in ideal)
+        {
+            if (!user.ContainsKey(joint.index)) continue;
+            Vector3 a = user[joint.index];
+            Vector3 b = new Vector3(joint.x, joint.y, joint.z);
+            total += Vector3.Distance(a, b);
+            count++;
+        }
+
+        return count > 0 ? total / count : 0f;
+    }
+
+
+    public float GetLiveScore()
+    {
+        return liveScore;
+    }
+
     private void OnValidate()
     {
-		corr = Quaternion.Euler(Agle);
+        SpineCorrRotation = Quaternion.Euler(SpineCorrTarget);
     }
 
-	Coroutine Posecor = null;
-    Quaternion corr = Quaternion.Euler(Vector3.zero);
+
+    Vector3 SpineTarget = Vector3.right;
+    Vector3 SpineCorrTarget = new Vector3(-1,2,1);
+    Quaternion SpineCorrRotation;
+
+    float LastHeightGap = 100000;
+    void PoseSub(bool OnInit = false)
+    {
+        Vector3 from, to, direction;
+        Quaternion rotation;
 
 
-	void PoseSub()
-	{
+            // 허리 회전
+        Vector3 dir = (landmarkPositions[11] - landmarkPositions[12]).normalized; // 이론 상으론 (1,0,0)이 되야 됨
+        LastValue[17] = dir;
 
-        foreach (var kp in Tongsin.inst.poseData[DeviceId])
+        float angleGapSpine = Vector3.Angle(LastValue[17], dir);
+        if (angleGapSpine >= Threshold || OnInit)
         {
-            landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
+            rotation = Quaternion.FromToRotation(dir, SpineTarget) * SpineCorrRotation;
+            jointMap[17].rotation = rotation;
+            LastValue[17] = dir;
         }
-        Vector3 p1 = landmarkPositions[11], p2 = landmarkPositions[24], p3 = landmarkPositions[12], p4 = landmarkPositions[23];
 
-        float midsub = 1.0f / ((p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x));
-        float sub1 = (p1.x * p2.y - p1.y * p2.x), sub2 = (p3.x * p4.y - p3.y * p4.x);
+            // 골반 회전 = Object 회전
+        dir = (landmarkPositions[23] - landmarkPositions[24]).normalized;
 
-        landmarkPositions[17] = new Vector3((sub1 * (p3.x - p4.x) - (p1.x - p2.x) * sub2) * midsub,
-            (sub1 * (p3.y - p4.y) - (p1.y - p2.y) * sub2),
-            (p1.z + p2.z + p3.z + p4.z) * 0.25f);
+        float angleGapHip = Vector3.Angle(LastValue[1], dir);
+        if (angleGapHip >= Threshold || OnInit)
+        {
+            rotation = Quaternion.FromToRotation(dir, SpineTarget) * SpineCorrRotation;
+            transform.rotation = rotation;
+            LastValue[1] = dir;
+        }
 
-        // 허리
-        from = landmarkPositions[17];
-        to = (landmarkPositions[11] + landmarkPositions[12]) * 0.5f;
-        direction = (from - to).normalized;
-        rotation = Quaternion.LookRotation(direction) * corr;
-        //jointMap[17].rotation = rotation;
-
-
-        // 상반 ( 허리 제외 )
         for (int i = 11; i <= 14; i++)
         {
             from = landmarkPositions[i];
             to = landmarkPositions[i + 2];
-            direction = (to - from).normalized;
-            AngleGap = Vector3.Angle(LastValue[i], direction);
-            if (AngleGap >= Threshold)
+            dir = (to - from).normalized;
+            float angleGap = Vector3.Angle(LastValue[i],dir);
+            if (angleGap >= Threshold || OnInit)
             {
-                rotation = Quaternion.LookRotation(direction) * corr;
+                rotation = Quaternion.LookRotation(dir) * corr;
                 jointMap[i].rotation = rotation;
-                //jointMap[i].rotation = Quaternion.Slerp(jointMap[i].rotation, rotation, Time.deltaTime * Threshold);
-                LastValue[i] = direction;
+                LastValue[i] = dir;
             }
         }
 
-
-        // 하반
         for (int i = 23; i <= 26; i++)
         {
             from = landmarkPositions[i];
             to = landmarkPositions[i + 2];
-            direction = (to - from).normalized;
-            AngleGap = Vector3.Angle(LastValue[i], direction);
-
-            if (AngleGap >= Threshold)
+            dir = (to - from).normalized;
+            float angleGap = Vector3.Angle(LastValue[i], dir);
+            if (angleGap >= Threshold || OnInit)
             {
-                rotation = Quaternion.LookRotation(direction) * corr;
+                rotation = Quaternion.LookRotation(dir) * corr;
                 jointMap[i].rotation = rotation;
-                //jointMap[i].rotation = Quaternion.Slerp(jointMap[i].rotation, rotation, Time.deltaTime * Threshold);
-                LastValue[i] = direction;
+                LastValue[i] = dir;
             }
         }
 
+        // 종아리 부분은 다르게 처리
         from = landmarkPositions[28];
         to = 0.5f * (landmarkPositions[30] + landmarkPositions[32]);
-        direction = (to - from).normalized;
-        AngleGap = Vector3.Angle(LastValue[28], direction);
-
-        if (AngleGap >= Threshold)
+        dir = (to - from).normalized;
+        float ag1 = Vector3.Angle(LastValue[28], dir);
+        if (ag1 >= Threshold || OnInit)
         {
-            rotation = Quaternion.LookRotation(direction) * corr;
-            jointMap[28].rotation = rotation;
-            //jointMap[i].rotation = Quaternion.Slerp(jointMap[i].rotation, rotation, Time.deltaTime * Threshold);
-            LastValue[28] = direction;
+            jointMap[28].rotation = Quaternion.LookRotation(dir) * corr;
+            LastValue[28] = dir;
         }
 
         from = landmarkPositions[27];
         to = 0.5f * (landmarkPositions[29] + landmarkPositions[31]);
-        direction = (to - from).normalized;
-        AngleGap = Vector3.Angle(LastValue[27], direction);
-
-        if (AngleGap >= Threshold)
+        dir = (to - from).normalized;
+        float ag2 = Vector3.Angle(LastValue[27], dir);
+        if (ag2 >= Threshold || OnInit)
         {
-            rotation = Quaternion.LookRotation(direction) * corr;
-            jointMap[27].rotation = rotation;
-            //jointMap[i].rotation = Quaternion.Slerp(jointMap[i].rotation, rotation, Time.deltaTime * Threshold);
-            LastValue[27] = direction;
+            jointMap[27].rotation = Quaternion.LookRotation(dir) * corr;
+            LastValue[27] = dir;
         }
+
+
         float Gap = Tongsin.inst.GapOfLeg[DeviceId] - Tongsin.inst.CurGap[DeviceId];
-        transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar * transform.localScale.y), StartPos.z);
-    }
-
-	Dictionary<int,Vector3> LastValue;
-	[SerializeField] float GapVar = -2.3f;
-	float Threshold = 1.5f;
-
-    float AngleGap;
-    Vector3 from, to, direction;
-    Quaternion rotation;
-
-    Dictionary<int, Vector3> landmarkPositions = new Dictionary<int, Vector3>();
-    IEnumerator ApplyPose()
-	{
-		var WFS = new WaitForSeconds(0.05f);
-       
-        foreach (var kp in Tongsin.inst.poseData[DeviceId])
+        if (Mathf.Abs(Gap - LastHeightGap) > 0.02f)
         {
-            LastValue[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
-            landmarkPositions[kp.id] = new Vector3(kp.x * Corr_Position.x, kp.y * Corr_Position.y, kp.z * Corr_Position.z);
+            LastHeightGap = Gap;
+            transform.position = new Vector3(StartPos.x, StartPos.y + (Gap * GapVar), StartPos.z);
         }
-        float TT = Threshold;
-        Threshold = 0;
-        PoseSub();
-        Threshold = TT;
-
-        while (true)
-		{
-			yield return WFS;
-            PoseSub();
-		}
     }
+}
+
+
+
+[System.Serializable]
+public class IdealFrame
+{
+    public int frame;
+    public List<Joint> pose;
+}
+
+[System.Serializable]
+public class Joint
+{
+    public int index;
+    public float x;
+    public float y;
+    public float z;
 }

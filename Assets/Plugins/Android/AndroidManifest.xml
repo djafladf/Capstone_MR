@@ -3,6 +3,8 @@
     package="com.DefaultCompany.Capstone">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
 
     <application
         android:label="@string/app_name"
