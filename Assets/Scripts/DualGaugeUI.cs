@@ -10,28 +10,27 @@ public class DualGaugeUI : MonoBehaviour
     public PosePlayer myPlayer;
     public PosePlayer rivalPlayer;   // 새로 추가
     public TextMeshProUGUI rivalScoreText;
+    public TextMeshProUGUI myScoreText;
 
-    void Update()
+
+    float MySum = 0.5f;
+    float RivalSum = 0.5f;
+    void FixedUpdate()
     {
-        float myScore = myPlayer != null ? myPlayer.GetLiveScore() : 0f;
-        float rivalScore = rivalPlayer != null ? rivalPlayer.GetLiveScore() : 0f;
-        float total = Mathf.Max(myScore + rivalScore, 0.001f);
-        float myRatio = myScore / total;
-        float rivalRatio = rivalScore / total;
+        float myScore = Random.Range(50f,100f);
+        float rivalScore = Random.Range(75f, 85f);
+        /* float myScore = myPlayer != null ? myPlayer.GetLiveScore() : 0f;
+         float rivalScore = rivalPlayer != null ? rivalPlayer.GetLiveScore() : 0f;*/
+        if (myScore < rivalScore) { MySum -= 0.001f; RivalSum += 0.001f;  }
+        if (myScore > rivalScore) { MySum += 0.001f; RivalSum -= 0.001f; }
 
-        myGauge.fillAmount = myRatio;
-        rivalGauge.fillAmount = rivalRatio;
+        myGauge.fillAmount = MySum;
+        rivalGauge.fillAmount = RivalSum;
 
-        if (sparkEffect != null && myGauge != null)
-        {
-            float width = myGauge.rectTransform.rect.width;
-            float sparkX = (myRatio * width) - (width / 2f);
-            sparkEffect.localPosition = new Vector3(sparkX, 0f, 0f);
-        }
-
-        if (rivalScoreText != null)
-        {
-            rivalScoreText.text = $"{rivalScore:F1}";
-        }
+        float width = myGauge.rectTransform.rect.width;
+        float sparkX = (MySum * width) - (width / 2f);
+        sparkEffect.localPosition = new Vector3(sparkX, 0f, 0f);
+        rivalScoreText.text = RivalSum.ToString("F2");
+        myScoreText.text = MySum.ToString("F2");
     }
 }

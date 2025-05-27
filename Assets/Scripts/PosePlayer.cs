@@ -24,7 +24,7 @@ public class PosePlayer : MonoBehaviour
     private Quaternion corr = Quaternion.Euler(Vector3.zero);
     private Vector3 StartPos;
     [SerializeField]private float Threshold = 1.5f;
-    private float GapVar = -1.8f;
+    [SerializeField]private float GapVar = -1.8f;
     private int frameIndex = 0;
     private float liveScore = 100f;
 
@@ -262,10 +262,10 @@ public class PosePlayer : MonoBehaviour
 
 
         float Gap = Tongsin.inst.GapOfLeg[DeviceId] - Tongsin.inst.CurGap[DeviceId];
-        if (Mathf.Abs(Gap - LastHeightGap) > 0.05f)
+        if (Mathf.Abs(Gap - LastHeightGap) > 0.02f)
         {
             LastHeightGap = Gap;
-            transform.position = new Vector3(StartPos.x, StartPos.y - (Gap * GapVar), StartPos.z);
+            transform.position = new Vector3(StartPos.x, StartPos.y + (Gap * GapVar), StartPos.z);
         }
     }
 }

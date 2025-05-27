@@ -8,6 +8,8 @@ public class PoseComparer : MonoBehaviour
     [SerializeField] private Transform rootObject;
     [SerializeField] private float angleThreshold = 20f;
 
+    [SerializeField] PosePlayerGuide ForMovie;
+
     private Dictionary<int, string> jointToPart = new Dictionary<int, string>
     {
         {23, "LeftUpLeg"},
@@ -51,10 +53,10 @@ public class PoseComparer : MonoBehaviour
             int jointId = pair.Key;
             string partName = pair.Value;
 
-            if (!userPose.jointMap.ContainsKey(jointId) || !guidePose.jointMap.ContainsKey(jointId))
+            if (!ForMovie.jointMap.ContainsKey(jointId) || !guidePose.jointMap.ContainsKey(jointId))
                 continue;
 
-            Quaternion userRot = userPose.jointMap[jointId].rotation;
+            Quaternion userRot = ForMovie.jointMap[jointId].rotation;
             Quaternion guideRot = guidePose.jointMap[jointId].rotation;
 
             float angle = Quaternion.Angle(userRot, guideRot) * vv;

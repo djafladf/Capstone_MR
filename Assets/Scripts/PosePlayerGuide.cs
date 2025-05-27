@@ -8,17 +8,22 @@ public class PosePlayerGuide : MonoBehaviour
 {
     public Dictionary<int, Transform> jointMap;
     private Dictionary<int, Quaternion> initialRotations;
-    private Dictionary<int, Vector3> LastValue = new Dictionary<int, Vector3>();
+    public Dictionary<int, Vector3> LastValue = new Dictionary<int, Vector3>();
     private List<IdealFrame> idealPose;
 
     [SerializeField] float Gaap;
     private int frameIndex = 0;
-    private float Threshold = 0;
+    [SerializeField] private float Threshold = 0;
     private Quaternion corr;
 
     [SerializeField] private TextAsset idealPoseJson;
     [SerializeField] private Vector3 Agle;
     [SerializeField] private Vector3 Corr_Position = Vector3.one;
+
+    private void OnValidate()
+    {
+        corr = Quaternion.Euler(Agle);
+    }
 
     void Start()
     {
@@ -80,6 +85,7 @@ public class PosePlayerGuide : MonoBehaviour
         }
     }
 
+    [SerializeField] bool Test = false;
     void ApplyPose(List<Joint> joints,bool I = false)
     {
         Dictionary<int, Vector3> landmarks = new Dictionary<int, Vector3>();
@@ -87,6 +93,7 @@ public class PosePlayerGuide : MonoBehaviour
         foreach (var joint in joints)
         {
             Vector3 pos = new Vector3(joint.x * Corr_Position.x, joint.y * Corr_Position.y, joint.z * Corr_Position.z);
+            if (Test) pos += new Vector3(Random.Range(-0.001f, 0.001f), Random.Range(-0.001f, 0.001f), Random.Range(-0.05f, 0.001f));
             landmarks[joint.index] = pos;
         }
 
