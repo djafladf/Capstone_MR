@@ -47,7 +47,8 @@ public class PosePlayerGuide : MonoBehaviour
             {28, anim.GetBoneTransform(HumanBodyBones.RightFoot)},
         };
 
-        print($"{name} : {jointMap[11].position - jointMap[27].position}");
+        float tnt = (jointMap[11].position.y - jointMap[27].position.y) / transform.localScale.y;
+        print($"{name} : {tnt}");
 
         StartPos = transform.position;
         LoadPoseJson();
@@ -56,16 +57,20 @@ public class PosePlayerGuide : MonoBehaviour
 
     void LoadPoseJson()
     {
-        idealPoseJson = Resources.Load<TextAsset>("ideal_pose");
 
         if (idealPoseJson == null)
         {
-            Debug.LogError("[Guide] ideal_pose.json을 Resources 폴더에 넣어주세요.");
+
             return;
         }
 
         idealPose = JsonConvert.DeserializeObject<List<IdealFrame>>(idealPoseJson.text);
-        Debug.Log("[Guide] ideal_pose.json 로드 완료. 프레임 수: " + idealPose.Count);
+
+    }
+
+    public List<IdealFrame> GetIdealFrames()
+    {
+        return idealPose;
     }
 
     IEnumerator PlayIdealPose()
@@ -155,8 +160,6 @@ public class PosePlayerGuide : MonoBehaviour
                 LastValue[i] = direction;
             }
         }
-
-        // 종아리 부분은 다르게 처리
         from = pos[28];
         to = 0.5f * (pos[30] + pos[32]);
         direction = (to - from).normalized;

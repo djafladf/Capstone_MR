@@ -71,6 +71,7 @@
     <Compile Include="Assets\Oculus\SampleFramework\Usage\Passthrough\Scripts\PassthroughProjectionSurface.cs" />
     <Compile Include="Assets\Samples\Meta XR Core SDK\76.0.1\Mixed Reality Sample\Scripts\SceneModelLoader.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Core\HandsInteraction\Scripts\Tools\FingerTipPokeTool.cs" />
+    <Compile Include="Assets\Oculus\SampleFramework\Core\Locomotion\Scripts\TeleportOrientationHandler.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Usage\HandsTrainExample\Scripts\HandsActiveChecker.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Core\Locomotion\Scripts\TeleportOrientationHandlerThumbstick.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Core\Video\Scripts\MediaPlayerImage.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="Assets\Oculus\SampleFramework\Usage\Passthrough\Scripts\GrabObject.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Core\DistanceGrab\Scripts\PauseOnInputLoss.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Usage\TouchPro\Scripts\StylusTip\StylusTip.cs" />
+    <Compile Include="Assets\Scripts\PoseComparer_saved.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Core\DebugUI\Scripts\DebugUIBuilder.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Usage\TouchPro\Scripts\Ui\UiBoolInspector.cs" />
     <Compile Include="Assets\Oculus\SampleFramework\Usage\SceneManager\Scripts\BouncingBallMgr.cs" />

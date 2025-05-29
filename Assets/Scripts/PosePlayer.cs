@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System.IO;
+using Unity.VisualScripting;
 
 public class PosePlayer : MonoBehaviour
 {
@@ -23,12 +24,19 @@ public class PosePlayer : MonoBehaviour
 
     private Quaternion corr = Quaternion.Euler(Vector3.zero);
     private Vector3 StartPos;
-    [SerializeField]private float Threshold = 1.5f;
-    [SerializeField]private float GapVar = -1.8f;
+    [SerializeField] private float Threshold = 1.5f;
+    [SerializeField] private float GapVar = -1.8f;
     private int frameIndex = 0;
     private float liveScore = 100f;
 
     private List<IdealFrame> idealPose;
+
+    float yLF, yRF;
+
+    private void OnValidate()
+    {
+        SpineCorrRotation = Quaternion.Euler(SpineCorrTarget);
+    }
 
     void Start()
     {
@@ -52,8 +60,8 @@ public class PosePlayer : MonoBehaviour
             {27, anim.GetBoneTransform(HumanBodyBones.LeftFoot)},
             {28, anim.GetBoneTransform(HumanBodyBones.RightFoot)},
         };
-        float tnt = jointMap[11].position.y - jointMap[27].position.y;
-        GapVar = tnt * 1.2f / 1.3f;
+        yLF = jointMap[27].position.y; yRF = jointMap[28].position.y;
+
         foreach (var joint in jointMap.Keys) LastValue[joint] = Vector3.right;
         LastValue[1] = Vector3.right;
 
@@ -100,7 +108,6 @@ public class PosePlayer : MonoBehaviour
             landmarkPositions[kp.id] = pos;
         }
         PoseSub(true);
-        foreach (var j in LastValue) print(j.Value);
 
         while (true)
         {
@@ -142,8 +149,6 @@ public class PosePlayer : MonoBehaviour
                     scoreText.color = Color.red;
             }
 
-
-
             frameIndex++;
         }
     }
@@ -165,67 +170,32 @@ public class PosePlayer : MonoBehaviour
         return count > 0 ? total / count : 0f;
     }
 
-
     public float GetLiveScore()
     {
         return liveScore;
     }
 
-    private void OnValidate()
-    {
-        SpineCorrRotation = Quaternion.Euler(SpineCorrTarget);
-    }
-
-
     Vector3 SpineTarget = Vector3.right;
-    Vector3 SpineCorrTarget = new Vector3(-1,2,1);
+    [SerializeField] Vector3 SpineCorrTarget = new Vector3(-1, 2, 1);
     Quaternion SpineCorrRotation;
 
     float LastHeightGap = 100000;
+
+    Vector3 from, to, dir;
+    Quaternion rotation;
+
+    [SerializeField] private bool LockGround = true;
+    [SerializeField] private float GroundY = 0f;
+
     void PoseSub(bool OnInit = false)
     {
-        Vector3 from, to, direction;
-        Quaternion rotation;
-
-
-            // 허리 회전
-        Vector3 dir = (landmarkPositions[11] - landmarkPositions[12]).normalized; // 이론 상으론 (1,0,0)이 되야 됨
-        LastValue[17] = dir;
-
-        float angleGapSpine = Vector3.Angle(LastValue[17], dir);
-        if (angleGapSpine >= Threshold || OnInit)
-        {
-            rotation = Quaternion.FromToRotation(dir, SpineTarget) * SpineCorrRotation;
-            jointMap[17].rotation = rotation;
-            LastValue[17] = dir;
-        }
-
-            // 골반 회전 = Object 회전
-        dir = (landmarkPositions[23] - landmarkPositions[24]).normalized;
-
-        float angleGapHip = Vector3.Angle(LastValue[1], dir);
-        if (angleGapHip >= Threshold || OnInit)
-        {
-            rotation = Quaternion.FromToRotation(dir, SpineTarget) * SpineCorrRotation;
-            transform.rotation = rotation;
-            LastValue[1] = dir;
-        }
+        print("!");
+        // 허리 회전
+        dir = (landmarkPositions[11] - landmarkPositions[12]).normalized;
+        rotation = Quaternion.FromToRotation(dir, SpineTarget) * SpineCorrRotation;
+        jointMap[17].rotation = rotation;
 
         for (int i = 11; i <= 14; i++)
-        {
-            from = landmarkPositions[i];
-            to = landmarkPositions[i + 2];
-            dir = (to - from).normalized;
-            float angleGap = Vector3.Angle(LastValue[i],dir);
-            if (angleGap >= Threshold || OnInit)
-            {
-                rotation = Quaternion.LookRotation(dir) * corr;
-                jointMap[i].rotation = rotation;
-                LastValue[i] = dir;
-            }
-        }
-
-        for (int i = 23; i <= 26; i++)
         {
             from = landmarkPositions[i];
             to = landmarkPositions[i + 2];
@@ -239,9 +209,24 @@ public class PosePlayer : MonoBehaviour
             }
         }
 
+        for (int i = 23; i <= 26; i++)
+        {
+            from = landmarkPositions[i];
+            to = landmarkPositions[i + 2];
+            dir = (to - from);
+            float angleGap = Vector3.Angle(LastValue[i], dir);
+            Debug.DrawRay(jointMap[i].position, dir, Color.red, 5f);
+            if (angleGap >= Threshold || OnInit)
+            {
+                rotation = Quaternion.LookRotation(dir) * corr;
+                jointMap[i].rotation = rotation;
+                LastValue[i] = dir;
+            }
+        }
+
         // 종아리 부분은 다르게 처리
         from = landmarkPositions[28];
-        to = 0.5f * (landmarkPositions[30] + landmarkPositions[32]);
+        to = landmarkPositions[32];
         dir = (to - from).normalized;
         float ag1 = Vector3.Angle(LastValue[28], dir);
         if (ag1 >= Threshold || OnInit)
@@ -251,8 +236,7 @@ public class PosePlayer : MonoBehaviour
         }
 
         from = landmarkPositions[27];
-        to = 0.5f * (landmarkPositions[29] + landmarkPositions[31]);
-        dir = (to - from).normalized;
+        to = landmarkPositions[31];
         float ag2 = Vector3.Angle(LastValue[27], dir);
         if (ag2 >= Threshold || OnInit)
         {
@@ -260,17 +244,27 @@ public class PosePlayer : MonoBehaviour
             LastValue[27] = dir;
         }
 
+        /*float cLF = jointMap[27].position.y, cRF = jointMap[28].position.y;
 
-        float Gap = Tongsin.inst.GapOfLeg[DeviceId] - Tongsin.inst.CurGap[DeviceId];
-        if (Mathf.Abs(Gap - LastHeightGap) > 0.02f)
+        if (cLF < cRF)
         {
-            LastHeightGap = Gap;
-            transform.position = new Vector3(StartPos.x, StartPos.y + (Gap * GapVar), StartPos.z);
+            Vector3 ttmp = transform.position;
+            ttmp.y -= (cLF - yLF);
+            transform.position = ttmp;
+        }
+        else
+        {
+            Vector3 ttmp = transform.position;
+            ttmp.y -= (cRF - yRF);
+            transform.position = ttmp;
+        }*/
+
+        if (LockGround)
+        {
+            transform.position = new Vector3(transform.position.x, GroundY, transform.position.z);
         }
     }
 }
-
-
 
 [System.Serializable]
 public class IdealFrame
