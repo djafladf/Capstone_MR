@@ -5,7 +5,11 @@ using UnityEngine.SceneManagement;
 
 public class SceneChangeTest : MonoBehaviour
 {
-    public void SceneChange()
+    public void SceneChange_Single()
+    {
+        SceneManager.LoadScene("SingleGame");
+    }
+    public void SceneChange_Multi()
     {
         SceneManager.LoadScene("MultiGame");
     }
